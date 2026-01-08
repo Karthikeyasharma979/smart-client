@@ -1,0 +1,7 @@
+--- Missing Icons ---
+LuAlertTriangle
+
+--- Alternatives ---
+Alert/Triangle matches: LuBadgeAlert, LuCircleAlert, LuClockAlert, LuCloudAlert, LuFlagTriangleLeft, LuFlagTriangleRight, LuOctagonAlert, LuShieldAlert, LuTriangle, LuTriangleAlert, LuTriangleRight
+Heading matches: LuHeading, LuHeading1, LuHeading2, LuHeading3, LuHeading4, LuHeading5, LuHeading6
+List matches: LuClipboardList, LuLayoutList, LuList, LuListCheck, LuListChecks, LuListCollapse, LuListEnd, LuListFilter, LuListMinus, LuListMusic, LuListOrdered, LuListPlus, LuListRestart, LuListStart, LuListTodo, LuListTree, LuListVideo, LuListX
