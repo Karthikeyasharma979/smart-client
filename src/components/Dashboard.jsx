@@ -14,8 +14,7 @@ import {
     LuPenTool,
     LuSend,
     LuUpload,
-    LuSun,
-    LuMoon,
+
     LuPanelLeft,
     LuMoveRight,
     LuMoveLeft,
@@ -28,6 +27,7 @@ import {
     LuLoader,
     LuArrowUpRight
 } from 'react-icons/lu';
+import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import EditorTab from './EditorTab';
 import ActivityPulse from './ActivityPulse';
@@ -36,14 +36,14 @@ const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([
-        { id: 1, text: 'Logged in successfully', time: 'Just now', unread: true },
-        { id: 2, text: 'Switched to Zen Mode', time: '2 mins ago', unread: true },
-        { id: 3, text: 'Document saved', time: '1 hour ago', unread: false },
-        { id: 4, text: 'AI Analysis complete', time: '2 hours ago', unread: false }
+        { id: 1, text: 'Dashboard Ready', time: 'Just now', unread: true },
+        { id: 2, text: 'Welcome Guest', time: '1 min ago', unread: true },
+        { id: 3, text: 'System Online', time: '2 mins ago', unread: false }
     ]);
+    const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/notionists/svg?seed=Guest');
+    const [showProfileModal, setShowProfileModal] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -55,30 +55,48 @@ const Dashboard = () => {
         };
         window.addEventListener('resize', handleResize);
 
-        // Sync theme on mount and change
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        // Randomize Avatar
+        const randomSeed = Math.random().toString(36).substring(7);
+        setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${randomSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9`);
 
         return () => window.removeEventListener('resize', handleResize);
-    }, [theme]);
+    }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
-    };
+
 
     const handleLogout = () => {
         navigate('/');
     };
 
+    const addNotification = (text, type = 'info') => {
+        setNotifications(prev => {
+            if (prev.length > 0) {
+                const latest = prev[0];
+                const isRecent = (Date.now() - latest.id) < 2000;
+                if (latest.text === text && isRecent) {
+                    return prev;
+                }
+            }
+
+            const newNotif = {
+                id: Date.now(),
+                text,
+                time: 'Just now',
+                unread: true,
+                type
+            };
+            return [newNotif, ...prev];
+        });
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'overview': return <OverviewTab setActiveTab={setActiveTab} />;
-            case 'editor': return <EditorTab />;
-            case 'chat': return <ChatTab theme={theme} />;
-            case 'summarizer': return <SummarizerTab />;
-            case 'plagiarism': return <PlagiarismTab theme={theme} />;
-            case 'doc-qa': return <DocQATab />;
+            case 'editor': return <EditorTab addNotification={addNotification} />;
+            case 'chat': return <ChatTab addNotification={addNotification} />;
+            case 'summarizer': return <SummarizerTab addNotification={addNotification} />;
+            case 'plagiarism': return <PlagiarismTab addNotification={addNotification} />;
+            case 'doc-qa': return <DocQATab addNotification={addNotification} />;
             default: return <OverviewTab setActiveTab={setActiveTab} />;
         }
     };
@@ -107,18 +125,13 @@ const Dashboard = () => {
                 zIndex: 50
             }}>
                 <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, var(--accent-color), #00C2FF)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 'bold',
-                        color: '#000'
-                    }}>S</div>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Smart Analyzer</span>
+                    <img src={logo} alt="Logo" style={{
+                        width: '70px',
+                        height: '70px',
+                        objectFit: 'contain',
+                        borderRadius: '6px'
+                    }} />
+                    <span style={{ fontSize: '1.25rem', fontWeight: 700, whiteSpace: 'nowrap' }}>STA</span>
                 </div>
 
                 <nav style={{ flex: 1, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -133,7 +146,7 @@ const Dashboard = () => {
 
                 <div style={{ padding: '24px 16px', borderTop: '1px solid var(--glass-border)' }}>
                     {/* <SidebarItem icon={LuSettings} label="Settings" /> */}
-                    <SidebarItem icon={LuLogOut} label="Logout" onClick={handleLogout} />
+                    <SidebarItem icon={LuLogOut} label="Exit Dashboard" onClick={handleLogout} />
                 </div>
             </aside>
 
@@ -195,40 +208,9 @@ const Dashboard = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                        {/* Search Bar Placeholder */}
-                        <div style={{
-                            position: 'relative',
-                            display: isMobile ? 'none' : 'block'
-                        }}>
-                            <LuSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                style={{
-                                    background: 'var(--glass-bg)',
-                                    border: '1px solid var(--glass-border)',
-                                    padding: '10px 16px 10px 40px',
-                                    borderRadius: '100px',
-                                    color: 'var(--text-primary)',
-                                    outline: 'none',
-                                    width: '250px'
-                                }}
-                            />
-                        </div>
 
-                        <button onClick={toggleTheme} style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'color 0.2s',
-                            padding: '8px'
-                        }} title="Toggle Theme">
-                            {theme === 'dark' ? <LuSun size={20} /> : <LuMoon size={20} />}
-                        </button>
+
+
 
                         <div style={{ position: 'relative' }}>
                             <button
@@ -238,7 +220,10 @@ const Dashboard = () => {
                                     border: 'none',
                                     color: 'var(--text-secondary)',
                                     cursor: 'pointer',
-                                    padding: '0'
+                                    padding: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}
                             >
                                 <LuBell size={20} />
@@ -287,6 +272,7 @@ const Dashboard = () => {
                                                     background: notif.unread ? 'var(--secondary-bg)' : 'transparent',
                                                     borderRadius: '12px',
                                                     border: '1px solid transparent',
+                                                    borderLeft: notif.type === 'success' ? '4px solid #22c55e' : notif.type === 'error' ? '4px solid #ef4444' : '4px solid transparent',
                                                     transition: 'all 0.2s',
                                                     display: 'flex',
                                                     flexDirection: 'column',
@@ -317,9 +303,18 @@ const Dashboard = () => {
                             )}
                         </div>
 
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 600 }}>JD</span>
-                        </div>
+                        <img
+                            onClick={() => setShowProfileModal(true)}
+                            src={avatarUrl}
+                            alt="Guest Avatar"
+                            style={{
+                                width: '40px', height: '40px', borderRadius: '50%',
+                                background: 'transparent',
+                                border: '1px solid var(--glass-border)',
+                                objectFit: 'cover',
+                                cursor: 'pointer'
+                            }}
+                        />
                     </div>
                 </header>
 
@@ -327,6 +322,52 @@ const Dashboard = () => {
                     {renderContent()}
                 </div>
             </main>
+
+            {/* User Profile Modal */}
+            {showProfileModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }} onClick={() => setShowProfileModal(false)}>
+                    <div style={{
+                        background: 'var(--bg-primary)',
+                        padding: '32px', borderRadius: '24px',
+                        border: '1px solid var(--glass-border)',
+                        width: '90%', maxWidth: '400px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                        animation: 'enterModal 0.3s ease-out'
+                    }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ position: 'relative' }}>
+                            <img src={avatarUrl} alt="Big Avatar" style={{ width: '120px', height: '120px', borderRadius: '50%', border: '4px solid var(--glass-bg)', boxShadow: '0 8px 32px rgba(0,0,0,0.15)', background: '#fff' }} />
+                            <div style={{ position: 'absolute', bottom: 0, right: 0, background: '#22c55e', width: '24px', height: '24px', borderRadius: '50%', border: '4px solid var(--bg-primary)' }} />
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Welcome, Guest!</h2>
+                            <p style={{ color: 'var(--text-secondary)' }}>You are using a temporary guest session. Your work is saved locally.</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                            <button
+                                onClick={() => {
+                                    const seed = Math.random().toString(36).substring(7);
+                                    setAvatarUrl(`https://api.dicebear.com/7.x/notionists/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`);
+                                }}
+                                style={{ flex: 1, padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'var(--secondary-bg)', border: '1px solid var(--glass-border)', borderRadius: '12px', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600 }}
+                            >
+                                <LuRefreshCw /> Regenerate
+                            </button>
+                            <button
+                                onClick={() => setShowProfileModal(false)}
+                                className="btn-primary"
+                                style={{ flex: 1, justifyContent: 'center' }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -344,24 +385,25 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
             width: '100%',
             borderRadius: '12px',
             background: active ? 'var(--accent-color)' : 'transparent',
-            color: active ? '#000' : 'var(--text-secondary)',
+            color: active ? '#000' : 'var(--text-primary)',
             border: 'none',
             cursor: 'pointer',
             transition: 'all 0.2s',
             fontWeight: active ? 600 : 500,
             fontSize: '1rem',
-            textAlign: 'left'
+            textAlign: 'left',
+            opacity: active ? 1 : 0.7
         }}
         onMouseEnter={e => {
             if (!active) {
                 e.currentTarget.style.background = 'var(--button-hover)';
-                e.currentTarget.style.color = 'var(--text-primary)';
+                e.currentTarget.style.opacity = '1';
             }
         }}
         onMouseLeave={e => {
             if (!active) {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.opacity = '0.7';
             }
         }}
     >
@@ -394,9 +436,9 @@ const OverviewTab = ({ setActiveTab }) => (
                 }} />
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Welcome back, John! 👋</h2>
+                    <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Welcome to your Workspace! 👋</h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', marginBottom: '32px' }}>
-                        You have 3 documents pending analysis and 2 new summaries available. What would you like to do today?
+                        Your intelligent writing assistant is ready. What would you like to do today?
                     </p>
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                         <button onClick={() => setActiveTab('chat')} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -470,27 +512,16 @@ const ToolCard = ({ title, desc, icon: Icon, color, onClick }) => {
                 padding: '24px',
                 borderRadius: '24px',
                 cursor: 'pointer',
-                border: '1px solid var(--glass-border)',
+                border: isHovered ? `1px solid ${color}` : '1px solid var(--glass-border)',
                 background: isHovered ? `linear-gradient(135deg, ${color}10, transparent)` : 'var(--glass-bg)',
                 position: 'relative',
                 overflow: 'hidden',
-                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                boxShadow: isHovered ? `0 20px 40px -10px ${color}30` : 'none'
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Gradient Glow Border effect */}
-            <div style={{
-                position: 'absolute', inset: -1,
-                borderRadius: '24px',
-                padding: '1px',
-                background: isHovered ? `linear-gradient(45deg, ${color}, transparent, transparent)` : 'transparent',
-                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                maskComposite: 'exclude',
-                pointerEvents: 'none',
-                transition: 'opacity 0.3s'
-            }} />
-
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div style={{
                     width: '56px',
@@ -526,7 +557,7 @@ const ToolCard = ({ title, desc, icon: Icon, color, onClick }) => {
 
 // --- Feature Placeholders ---
 
-const ChatTab = ({ theme }) => {
+const ChatTab = ({ addNotification }) => {
     // 1. Personas Configuration
     const personas = {
         friendly: { id: 'friendly', name: 'Friendly', icon: LuSparkles, color: '#00FF9D', greeting: "Hi there! I'm here to help you write something amazing today. 🌟" },
@@ -541,7 +572,15 @@ const ChatTab = ({ theme }) => {
     const [input, setInput] = useState('');
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [activeModel, setActiveModel] = useState('Gemini 1.5 Pro');
+    const [activeModel, setActiveModel] = useState('Gemini Fast (Free)');
+
+    const MODEL_MAP = {
+        'Gemini Fast (Free)': 'google/gemini-2.0-flash-exp:free',
+        'Smart GPT (Free)': 'openai/gpt-oss-120b:free',
+        'DeepSeek (Free)': 'tngtech/deepseek-r1t2-chimera:free',
+        'Llama 3.1 (Free)': 'meta-llama/llama-3.1-405b-instruct:free'
+    };
+
     const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
     const [isPersonaMenuOpen, setIsPersonaMenuOpen] = useState(false);
     const [attachment, setAttachment] = useState(null);
@@ -584,39 +623,58 @@ const ChatTab = ({ theme }) => {
         setInput('');
         setIsTyping(true);
 
-        // Simulate AI Response
-        setTimeout(() => {
-            setIsTyping(false);
-            let aiMsg;
-            if (textToSend.toLowerCase().includes('email')) {
-                aiMsg = {
-                    id: Date.now() + 1,
-                    sender: 'ai',
-                    type: 'artifact',
-                    title: 'Professional Email Draft',
-                    content: "Subject: Project Update\n\nDear Team,\n\nI'm writing to share the latest progress on the Alpha initiative. We have successfully completed Phase 1.",
-                    action: 'Copy Draft'
-                };
-            } else if (textToSend.toLowerCase().includes('code') || textToSend.toLowerCase().includes('react')) {
-                aiMsg = {
-                    id: Date.now() + 1,
-                    sender: 'ai',
-                    type: 'artifact',
-                    title: 'React Component',
-                    content: "const MyComponent = () => {\n  return <div>Hello World</div>;\n};",
-                    action: 'Copy Code',
-                    isCode: true
-                };
-            } else {
-                aiMsg = {
+        const fetchAIResponse = async () => {
+
+
+            const selectedModelId = MODEL_MAP[activeModel] || 'meta-llama/llama-3.2-3b-instruct:free';
+
+            try {
+                const response = await fetch('/generative', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: textToSend,
+                        user: 'dashboard-user',
+                        tone: personas[activePersona]?.name?.toLowerCase() || 'friendly',
+                        model: selectedModelId
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const errorMessage = errData.details || errData.error || response.statusText || 'Network error';
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+
+                setIsTyping(false);
+                const aiMsg = {
                     id: Date.now() + 1,
                     sender: 'ai',
                     type: 'text',
-                    content: `Here is a ${personas[activePersona].name.toLowerCase()} response to: "${textToSend}"`
+                    content: data.output || "I'm sorry, I couldn't generate a response."
                 };
+                setMessages(prev => [...prev, aiMsg]);
+
+                if (addNotification) addNotification('Message processed successfully', 'success');
+
+            } catch (error) {
+                console.error("Chat Error:", error);
+                setIsTyping(false);
+                const errorMsg = {
+                    id: Date.now() + 1,
+                    sender: 'ai',
+                    type: 'text',
+                    content: `Error: ${error.message}. Please try again.`
+                };
+                setMessages(prev => [...prev, errorMsg]);
+
+                if (addNotification) addNotification('Failed to generate response', 'error');
             }
-            setMessages(prev => [...prev, aiMsg]);
-        }, 1500);
+        };
+
+        fetchAIResponse();
     };
 
     const hasMessages = messages.length > 0;
@@ -628,10 +686,10 @@ const ChatTab = ({ theme }) => {
             display: 'flex',
             flexDirection: 'column',
             borderRadius: '24px',
-            border: theme === 'light' ? '1px solid #e0e0e0' : '1px solid var(--glass-border)',
+            border: '1px solid var(--glass-border)',
             overflow: 'hidden',
             position: 'relative',
-            background: theme === 'light' ? '#f8f9fa' : 'var(--glass-bg)',
+            background: 'var(--glass-bg)',
             transition: 'all 0.3s ease'
         }}>
 
@@ -658,10 +716,10 @@ const ChatTab = ({ theme }) => {
                             fontSize: '2.5rem',
                             fontWeight: 700,
                             marginBottom: '12px',
-                            background: theme === 'light' ? 'transparent' : 'linear-gradient(to right, #fff, #888)',
-                            color: theme === 'light' ? '#000' : 'transparent',
-                            WebkitBackgroundClip: theme === 'light' ? 'border-box' : 'text',
-                            WebkitTextFillColor: theme === 'light' ? 'inherit' : 'transparent'
+                            background: 'linear-gradient(to right, #fff, #888)',
+                            color: 'transparent',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
                         }}>
                             Good evening, John
                         </h2>
@@ -678,8 +736,8 @@ const ChatTab = ({ theme }) => {
                                 style={{
                                     padding: '16px 20px',
                                     borderRadius: '16px',
-                                    background: theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)',
-                                    border: theme === 'light' ? '1px solid #eee' : '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
                                     color: 'var(--text-primary)',
                                     fontSize: '0.9rem',
                                     textAlign: 'left',
@@ -688,7 +746,7 @@ const ChatTab = ({ theme }) => {
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = activeColor; }}
-                                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = theme === 'light' ? '#eee' : 'rgba(255,255,255,0.1)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
                             >
                                 {prompt}
                                 <LuMoveRight size={16} style={{ opacity: 0.5 }} />
@@ -701,14 +759,14 @@ const ChatTab = ({ theme }) => {
                     <div style={{
                         width: '100%',
                         maxWidth: '750px',
-                        background: theme === 'light' ? '#fff' : '#1a1a1a',
-                        border: theme === 'light' ? '1px solid #e5e5e5' : '1px solid #333',
+                        background: '#1a1a1a',
+                        border: '1px solid #333',
                         borderRadius: '16px',
                         padding: '16px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
-                        boxShadow: theme === 'light' ? '0 4px 20px rgba(0,0,0,0.05)' : 'none',
+                        boxShadow: 'none',
                         position: 'relative'
                     }}>
                         <textarea
@@ -753,7 +811,7 @@ const ChatTab = ({ theme }) => {
                                     style={{
                                         fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px',
                                         color: 'var(--text-primary)', cursor: 'pointer', userSelect: 'none',
-                                        background: theme === 'light' ? '#f3f4f6' : 'rgba(255,255,255,0.05)',
+                                        background: 'rgba(255,255,255,0.05)',
                                         padding: '4px 8px', borderRadius: '6px'
                                     }}
                                 >
@@ -767,13 +825,13 @@ const ChatTab = ({ theme }) => {
                                 {isModelMenuOpen && (
                                     <div style={{
                                         position: 'absolute', bottom: 'calc(100% + 4px)', left: '0', top: 'auto',
-                                        background: theme === 'light' ? '#ffffff' : '#1e1e1e',
+                                        background: '#1e1e1e',
                                         border: '1px solid var(--glass-border)', borderRadius: '12px',
                                         padding: '6px', display: 'flex', flexDirection: 'column', gap: '2px',
                                         width: 'max-content', minWidth: '160px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', zIndex: 1000,
                                         maxHeight: '240px', overflowY: 'auto'
                                     }}>
-                                        {['Gemini 1.5 Pro', 'GPT-4o', 'Claude 3.5 Sonnet', 'Llama 3 70B'].map(model => (
+                                        {['Gemini 1.5 Pro', 'GPT-4o', 'Deepseek', 'Llama 3 70B'].map(model => (
                                             <button key={model}
                                                 onClick={() => { setActiveModel(model); setIsModelMenuOpen(false); }}
                                                 style={{
@@ -799,8 +857,8 @@ const ChatTab = ({ theme }) => {
                                     style={{
                                         padding: '4px 10px',
                                         borderRadius: '6px',
-                                        background: theme === 'light' ? '#f0f9ff' : 'rgba(56, 189, 248, 0.1)',
-                                        color: theme === 'light' ? '#0ea5e9' : '#38bdf8',
+                                        background: 'rgba(56, 189, 248, 0.1)',
+                                        color: '#38bdf8',
                                         fontSize: '0.8rem',
                                         fontWeight: 500,
                                         display: 'flex', alignItems: 'center', gap: '6px',
@@ -817,7 +875,7 @@ const ChatTab = ({ theme }) => {
                                 {isPersonaMenuOpen && (
                                     <div style={{
                                         position: 'absolute', bottom: 'calc(100% + 4px)', left: '160px', top: 'auto',
-                                        background: theme === 'light' ? '#ffffff' : '#1e1e1e',
+                                        background: '#1e1e1e',
                                         border: '1px solid var(--glass-border)', borderRadius: '12px',
                                         padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
                                         width: '160px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', zIndex: 1000,
@@ -849,10 +907,10 @@ const ChatTab = ({ theme }) => {
                                 <input type="file" ref={imageInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageSelect} />
                                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
 
-                                <button onClick={() => imageInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: theme === 'light' ? '#f3f4f6' : '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                                <button onClick={() => imageInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
                                     <LuImage size={20} />
                                 </button>
-                                <button onClick={() => fileInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: theme === 'light' ? '#f3f4f6' : '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                                <button onClick={() => fileInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
                                     <LuPaperclip size={20} />
                                 </button>
                                 <button onClick={() => handleSend()} style={{ width: '36px', height: '36px', borderRadius: '8px', background: activeColor, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '8px' }}>
@@ -881,7 +939,7 @@ const ChatTab = ({ theme }) => {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>AI can make mistakes. Please double-check responses.</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             <span>Use</span>
-                            <span style={{ background: theme === 'light' ? '#eee' : '#333', padding: '2px 6px', borderRadius: '4px' }}>shift + return</span>
+                            <span style={{ background: '#333', padding: '2px 6px', borderRadius: '4px' }}>shift + return</span>
                             <span>for new line</span>
                         </div>
                     </div>
@@ -928,7 +986,7 @@ const ChatTab = ({ theme }) => {
                             <div key={msg.id} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                                 {msg.type === 'text' ? (
                                     <div style={{
-                                        background: msg.sender === 'user' ? activeColor : (theme === 'light' ? '#fff' : 'rgba(255,255,255,0.05)'),
+                                        background: msg.sender === 'user' ? activeColor : 'rgba(255,255,255,0.05)',
                                         color: msg.sender === 'user' ? '#000' : 'var(--text-primary)',
                                         border: msg.sender === 'user' ? 'none' : '1px solid var(--glass-border)',
                                         padding: '16px 24px',
@@ -1078,7 +1136,7 @@ const ChatTab = ({ theme }) => {
     );
 };
 
-const SummarizerTab = () => {
+const SummarizerTab = ({ addNotification }) => {
     // State for the Enhanced Distillery
     const [isProcessing, setIsProcessing] = useState(false);
     const [showOutput, setShowOutput] = useState(false);
@@ -1090,11 +1148,16 @@ const SummarizerTab = () => {
     // Pre-filled text for demo
     const defaultText = "Artificial Intelligence (AI) simulates human intelligence processes by machines, especially computer systems. These processes include learning (the acquisition of information and rules for using the information), reasoning (using rules to reach approximate or definite conclusions), and self-correction. Particular applications of AI include expert systems, speech recognition, and machine vision.";
 
-    const handleSummarize = () => {
-        if (!inputText && !defaultText) return;
+    const [summaryResult, setSummaryResult] = useState('');
+
+    const handleSummarize = async () => {
+        const textToSummarize = inputText.trim() || defaultText;
+        if (!textToSummarize) return;
+
         setIsProcessing(true);
         setShowOutput(false);
         setParticles([]);
+        setSummaryResult(''); // Clear previous result
 
         // 1. Emit Particles from Input (Left -> Center)
         const inboundParticles = Array.from({ length: 12 }).map((_, i) => ({
@@ -1104,21 +1167,49 @@ const SummarizerTab = () => {
         }));
         setParticles(inboundParticles);
 
-        // 2. Process & Emit Output (Center -> Right)
-        setTimeout(() => {
+        try {
+            // 2. Call Backend API
+            const response = await fetch('/summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: textToSummarize,
+                    user: 'dashboard-user',
+                    length: summaryLength,
+                    format: summaryFormat
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to summarize');
+            }
+
+            const data = await response.json();
+            setSummaryResult(data.output);
+
+            // 3. Process & Emit Output Particles (Center -> Right)
             const outboundParticles = Array.from({ length: 12 }).map((_, i) => ({
                 id: `out-${i}`,
                 delay: Math.random() * 0.5,
                 type: 'outbound'
             }));
             setParticles(prev => [...prev, ...outboundParticles]);
-        }, 1500);
 
-        // 3. Show Result
-        setTimeout(() => {
+            // 4. Show Result after a short animation buffer
+            setTimeout(() => {
+                setIsProcessing(false);
+                setShowOutput(true);
+                if (addNotification) addNotification('Summary generated successfully!', 'success');
+            }, 1000);
+
+        } catch (error) {
+            console.error("Summarize Error:", error);
             setIsProcessing(false);
-            setShowOutput(true);
-        }, 3000);
+            setSummaryResult(`Error: ${error.message}`);
+            setShowOutput(true); // Show error payload
+            if (addNotification) addNotification('Failed to generate summary.', 'error');
+        }
     };
 
     return (
@@ -1270,24 +1361,20 @@ const SummarizerTab = () => {
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             {summaryFormat === 'bullets' ? (
                                 <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    {[
-                                        "AI simulates human intelligence in machines.",
-                                        "Key processes: learning, reasoning, self-correction.",
-                                        "Applications include expert systems and machine vision."
-                                    ].map((point, i) => (
+                                    {summaryResult.split(/\n|•|- /).filter(item => item.trim().length > 0).map((item, i) => (
                                         <li key={i} style={{
                                             display: 'flex', gap: '12px', alignItems: 'flex-start',
                                             animation: `fadeIn 0.5s ease backwards ${i * 0.2}s`
                                         }}>
                                             <span style={{ marginTop: '6px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-color)', flexShrink: 0 }} />
-                                            <span style={{ lineHeight: '1.6' }}>{point}</span>
+                                            <span style={{ lineHeight: '1.6' }}>{item.trim()}</span>
                                         </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p style={{ lineHeight: '1.8', animation: 'fadeIn 0.5s ease' }}>
-                                    Artificial Intelligence (AI) is a branch of computer science comprised of machines that mimic human intelligence. It primarily focuses on three cognitive processes: learning rules for information, reasoning to reach conclusions, and self-correction. Today, AI powers diverse technologies from intricate expert systems to everyday speech recognition tools.
-                                </p>
+                                <div style={{ lineHeight: '1.8', animation: 'fadeIn 0.5s ease', whiteSpace: 'pre-wrap', color: 'var(--text-primary)' }}>
+                                    {summaryResult}
+                                </div>
                             )}
                         </div>
                     ) : (
@@ -1302,7 +1389,7 @@ const SummarizerTab = () => {
     );
 };
 
-const PlagiarismTab = ({ theme }) => {
+const PlagiarismTab = ({ addNotification }) => {
     // State for Input and Analysis
     const [step, setStep] = useState('input'); // 'input', 'scanning', 'results'
     const [activeConcept, setActiveConcept] = useState('isometric'); // 'isometric' | 'forensic'
@@ -1357,7 +1444,10 @@ const PlagiarismTab = ({ theme }) => {
                     const data = compareTexts(text1, text2);
                     setAnalysisData(data);
 
-                    setTimeout(() => setStep('results'), 500);
+                    setTimeout(() => {
+                        setStep('results');
+                        if (addNotification) addNotification('Plagiarism check completed', 'success');
+                    }, 500);
                     return 100;
                 }
                 return prev + 4; // Faster scan
@@ -1411,21 +1501,21 @@ const PlagiarismTab = ({ theme }) => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '24px' }}>
                     <button
                         onClick={handleAnalyze}
                         disabled={!text1 || !text2}
                         className="btn-primary"
-                        style={{ padding: '16px 64px', fontSize: '1.1rem', opacity: (!text1 || !text2) ? 0.5 : 1 }}
+                        style={{ padding: '16px 64px', fontSize: '1.1rem', opacity: (!text1 || !text2) ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                        <LuScanSearch size={20} style={{ marginRight: '8px' }} /> ANALYZE CONTENT
+                        <LuScanSearch size={20} /> ANALYZE CONTENT
                     </button>
                     <button
                         onClick={() => {
                             setText1("Artificial Intelligence is the intelligence of machines or software, as opposed to the intelligence of living beings, primarily of humans. It is a field of study in computer science that develops and studies intelligent machines. Such machines may be called AIs.");
                             setText2("Artificial Intelligence is the intelligence of machines or software. It is unlike the natural intelligence displayed by humans and animals. It is a field of study in computer science that develops and studies intelligent machines.");
                         }}
-                        style={{ marginLeft: '16px', background: 'transparent', border: 'none', textDecoration: 'underline', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                        style={{ marginTop: '16px', background: 'transparent', border: 'none', textDecoration: 'underline', color: 'var(--text-secondary)', cursor: 'pointer' }}
                     >
                         Load Demo Data
                     </button>
@@ -1458,8 +1548,8 @@ const PlagiarismTab = ({ theme }) => {
                 transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}>
                 {/* Result Viz */}
-                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', borderRadius: '24px', border: '1px solid var(--glass-border)', background: theme === 'light' ? 'rgba(255,255,255,0.5)' : '#050505' }}>
-                    <PlagiarismResults data={analysisData} matchPercentage={matchPercentage} resetAnalysis={resetAnalysis} theme={theme} />
+                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', borderRadius: '24px', border: '1px solid var(--glass-border)', background: '#050505' }}>
+                    <PlagiarismResults data={analysisData} matchPercentage={matchPercentage} resetAnalysis={resetAnalysis} />
                 </div>
             </div>
 
@@ -1468,18 +1558,17 @@ const PlagiarismTab = ({ theme }) => {
 };
 
 // --- New Concept: DNA Source Map ---
-const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, theme }) => {
+const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
     // Calculate stats
     const totalSentences = data ? data.length : 0;
     const matches = data ? data.filter(d => d.type === 'danger').length : 0;
     const safe = totalSentences - matches;
     const safePercentage = totalSentences > 0 ? Math.round((safe / totalSentences) * 100) : 100;
 
-    const isLight = theme === 'light';
-    const bg = isLight ? 'linear-gradient(to bottom right, #ffffff, #f0f9ff)' : '#09090b';
-    const text = isLight ? '#1a1a1a' : '#fff';
-    const border = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
-    const subdued = isLight ? 'rgba(0,0,0,0.4)' : '#888';
+    const bg = '#09090b';
+    const text = '#fff';
+    const border = 'rgba(255,255,255,0.1)';
+    const subdued = '#888';
 
     return (
         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: bg, color: text }}>
@@ -1495,7 +1584,7 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, theme }) => {
                     <button
                         onClick={resetAnalysis}
                         style={{
-                            background: isLight ? '#f3f4f6' : 'rgba(255,255,255,0.1)',
+                            background: 'rgba(255,255,255,0.1)',
                             border: `1px solid ${border}`,
                             borderRadius: '8px',
                             padding: '10px 20px',
@@ -1522,7 +1611,7 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, theme }) => {
                 {/* Visual Map (Left Side) */}
                 <div className="dna-sidebar">
                     <div className="hide-text-mobile" style={{ fontSize: '0.65rem', color: subdued, marginBottom: '10px', writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '2px' }}>DNA SEQUENCER</div>
-                    <div style={{ width: '8px', flex: 1, background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)', borderRadius: '10px', position: 'relative' }}>
+                    <div style={{ width: '8px', flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: '10px', position: 'relative' }}>
                         {data && data.map((item, i) => (
                             <div key={i} style={{
                                 position: 'absolute',
@@ -1545,12 +1634,12 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, theme }) => {
                                 padding: '16px',
                                 borderRadius: '12px',
                                 background: item.type === 'danger'
-                                    ? (isLight ? '#fee2e2' : 'rgba(255, 77, 77, 0.05)')
-                                    : (isLight ? '#fff' : 'rgba(255,255,255,0.02)'),
-                                border: isLight ? '1px solid #e5e7eb' : 'none',
+                                    ? 'rgba(255, 77, 77, 0.05)'
+                                    : 'rgba(255,255,255,0.02)',
+                                border: 'none',
                                 borderLeft: item.type === 'danger'
                                     ? '4px solid #ff4d4d'
-                                    : (isLight ? '4px solid transparent' : '4px solid rgba(255,255,255,0.1)'),
+                                    : '4px solid rgba(255,255,255,0.1)',
                                 transition: 'all 0.2s',
                                 animation: 'fadeIn 0.5s ease backwards',
                                 animationDelay: `${item.id * 0.05}s`
@@ -1559,11 +1648,11 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, theme }) => {
                                     <span>SEGMENT ID: {item.id.toString().padStart(4, '0')}</span>
                                     {item.type === 'danger' && <span style={{ color: '#ff4d4d', fontWeight: 'bold' }}>⚠️ MATCH DETECTED</span>}
                                 </div>
-                                <p style={{ lineHeight: '1.6', fontSize: '1.05rem', color: item.type === 'danger' ? (isLight ? '#991b1b' : '#ffcccc') : text, margin: 0 }}>
+                                <p style={{ lineHeight: '1.6', fontSize: '1.05rem', color: item.type === 'danger' ? '#ffcccc' : text, margin: 0 }}>
                                     {item.text}
                                 </p>
                                 {item.type === 'danger' && (
-                                    <div style={{ marginTop: '12px', padding: '12px', background: isLight ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.9rem', color: '#ff4d4d', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.9rem', color: '#ff4d4d', display: 'flex', gap: '10px', alignItems: 'center' }}>
                                         <LuScanSearch />
                                         <span><strong>Source Match:</strong> Database Record #{Math.floor(Math.random() * 9000) + 1000} (98% Confidence)</span>
                                     </div>
@@ -1587,7 +1676,7 @@ const Stat = ({ label, value, color = '#fff', labelColor = '#888' }) => (
     </div>
 );
 
-const DocQATab = () => {
+const DocQATab = ({ addNotification }) => {
     const [file, setFile] = useState(null);
     const [fileUrl, setFileUrl] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -1608,50 +1697,108 @@ const DocQATab = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isTyping]);
 
-    const handleFileSelect = (e) => {
+    const handleFileSelect = async (e) => {
         if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
             setIsProcessing(true);
 
-            // Artificial delay for "Scanning" effect
-            setTimeout(() => {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Upload failed');
+                }
+
                 setFile(selectedFile);
                 if (selectedFile.type === 'application/pdf') {
                     setFileUrl(URL.createObjectURL(selectedFile));
                 } else {
                     setFileUrl(null);
                 }
+
                 setIsProcessing(false);
                 setMessages([{
                     id: 1,
                     role: 'ai',
-                    text: `Analysis complete. I'm ready to answer questions about "${selectedFile.name}".`
+                    text: `Analysis complete. I've read "${selectedFile.name}" and I'm ready to answer your questions!`
                 }]);
-            }, 2000);
+                if (addNotification) addNotification('File uploaded successfully', 'success');
+
+            } catch (err) {
+                console.error("Upload Error:", err);
+                setIsProcessing(false);
+                setMessages([{
+                    id: 1,
+                    role: 'ai',
+                    text: `Error uploading file: ${err.message}. Please try again.`
+                }]);
+                if (addNotification) addNotification('File upload failed', 'error');
+            }
         }
     };
 
-    const handleSendMessage = (e) => {
-        if (e.key === 'Enter' && inputValue.trim()) {
-            const userMsg = { id: Date.now(), role: 'user', text: inputValue };
+    const handleSendMessage = async (e) => {
+        if ((e.key === 'Enter' || e.type === 'click') && inputValue.trim()) {
+            const userText = inputValue.trim();
+            const userMsg = { id: Date.now(), role: 'user', text: userText };
             setMessages(prev => [...prev, userMsg]);
             setInputValue('');
             setIsTyping(true);
 
-            // Simulate AI response
-            setTimeout(() => {
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: userText })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Query failed');
+                }
+
+                const data = await response.json();
+
                 setIsTyping(false);
                 setMessages(prev => [...prev, {
                     id: Date.now() + 1,
                     role: 'ai',
-                    text: "That's a great question. Based on the document, I can confirm that the core thesis revolves around the integration of neural networks with symbolic reasoning."
+                    text: data.response
                 }]);
-            }, 1500);
+                if (addNotification) addNotification('Query processed', 'success');
+
+            } catch (err) {
+                console.error("Query Error:", err);
+                setIsTyping(false);
+                setMessages(prev => [...prev, {
+                    id: Date.now() + 1,
+                    role: 'ai',
+                    text: `Error: ${err.message}. Please try again.`
+                }]);
+                if (addNotification) addNotification('Query failed', 'error');
+            }
         }
     };
 
     return (
         <div className="doc-qa-container" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+            {/* Styles for animations */}
+            <style>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            `}</style>
+
             {/* Document Viewer */}
             <div className="glass-panel doc-qa-panel" style={{
                 borderRadius: '24px',
@@ -1787,10 +1934,19 @@ const DocQATab = () => {
                                 background: msg.role === 'user' ? 'var(--accent-color)' : 'var(--chat-bubble-bg)',
                                 color: msg.role === 'user' ? '#000' : 'var(--text-primary)',
                                 fontSize: '0.95rem',
-                                lineHeight: '1.5',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                                lineHeight: '1.6',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                whiteSpace: 'pre-wrap'
                             }}>
-                                {msg.text}
+                                {msg.role === 'ai' ? (
+                                    <span dangerouslySetInnerHTML={{
+                                        __html: msg.text
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/- (.*?)(?=\n|$)/g, '<li>$1</li>')
+                                    }} />
+                                ) : (
+                                    msg.text
+                                )}
                             </div>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '4px', textAlign: msg.role === 'user' ? 'right' : 'left', opacity: 0.7 }}>
                                 {msg.role === 'user' ? 'You' : 'AI Assistant'}

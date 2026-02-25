@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LuPenTool, LuMenu, LuX } from 'react-icons/lu';
-import { FaMoon, FaSun } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -31,13 +25,8 @@ const Navbar = () => {
         };
     }, []);
 
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-    };
-
     const navLinks = [
         { name: 'Features', path: '/features' },
-        { name: 'Blog', path: '/blog' },
         { name: 'About Us', path: '/about' },
     ];
 
@@ -56,20 +45,20 @@ const Navbar = () => {
             <nav className="nav-appear" style={{
                 background: 'var(--nav-bg)',
                 backdropFilter: 'blur(16px)',
-                border: '1px solid var(--nav-border)',
                 padding: '12px 24px',
                 borderRadius: '100px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '40px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                 pointerEvents: 'auto',
                 transition: 'all 0.3s ease',
                 width: isMobile ? '100%' : 'auto',
-                maxWidth: '1200px',
+                maxWidth: '800px', // Smaller width for pill look
                 opacity: 0,
-                transform: 'translateY(-20px)'
+                transform: 'translateY(-20px)',
+                border: '1px solid rgba(0, 255, 157, 0.2)', // Green tint border
+                boxShadow: '0 0 20px rgba(0, 255, 157, 0.1)' // Green glow
             }}>
                 {/* Logo */}
                 <div
@@ -82,19 +71,12 @@ const Navbar = () => {
                         cursor: 'pointer'
                     }}
                 >
-                    <div style={{
-                        width: '32px',
-                        height: '32px',
-                        background: 'linear-gradient(135deg, var(--accent-color), #2196F3)',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transform: 'rotate(-10deg)',
-                        boxShadow: '0 4px 12px rgba(0, 255, 157, 0.3)'
-                    }}>
-                        <LuPenTool size={18} color="#000" />
-                    </div>
+                    <img src={logo} alt="Logo" style={{
+                        width: '40px',
+                        height: '40px',
+                        objectFit: 'contain',
+                        borderRadius: '4px'
+                    }} />
                     {!isMobile && <span style={{ fontWeight: 700, letterSpacing: '-0.02em', fontSize: '1.1rem' }}>Smart Text Analyzer</span>}
                     {isMobile && <span style={{ fontWeight: 700, letterSpacing: '-0.02em', fontSize: '1.1rem' }}>S.T.A.</span>}
                 </div>
@@ -142,19 +124,6 @@ const Navbar = () => {
 
                 {/* Right Side Actions */}
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <button onClick={toggleTheme} style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'color 0.2s'
-                    }}>
-                        {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
-                    </button>
 
                     {!isMobile && (
                         <button
@@ -162,7 +131,7 @@ const Navbar = () => {
                             style={{ padding: '8px 20px', fontSize: '14px' }}
                             onClick={() => navigate('/dashboard')}
                         >
-                            Try Free
+                            Open Editor
                         </button>
                     )}
 
@@ -242,7 +211,7 @@ const Navbar = () => {
                         onClick={() => { navigate('/dashboard'); setMenuOpen(false); }}
                         style={{ width: '100%', justifyContent: 'center', display: 'flex' }}
                     >
-                        Try Free
+                        Open Editor
                     </button>
                 </div>
             )}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     LuCheck,
     LuBold,
@@ -33,8 +33,9 @@ import {
     LuScissors,
     LuFeather
 } from 'react-icons/lu';
+import html2pdf from 'html2pdf.js';
 
-const EditorTab = () => {
+const EditorTab = ({ addNotification }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [activeTab, setActiveTab] = useState('grammar');
@@ -44,35 +45,58 @@ const EditorTab = () => {
     const [isFocused, setIsFocused] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
-    const [overallScore, setOverallScore] = useState(85);
+    const [overallScore, setOverallScore] = useState(0);
     const [issueCounts, setIssueCounts] = useState({ correctness: 0, clarity: 0, engagement: 0, delivery: 0 });
 
-    const handleAnalysis = () => {
+    const handleAnalysis = async () => {
         setIsAnalyzing(true);
         setAnalysisResult(null);
 
-        // MOCK BACKEND CALL - Replace this block with actual fetch request
-        setTimeout(() => {
-            setIsAnalyzing(false);
-            setAnalysisResult({
-                suggestions: [
-                    { id: 1, type: 'grammar', message: 'Consider using "utilize" instead of "use" for formal tone.' },
-                    { id: 2, type: 'style', message: 'Sentence is slightly too long, consider splitting.' }
-                ]
-            });
-            setOverallScore(92);
-            setIssueCounts({ correctness: 3, clarity: 1, engagement: 0, delivery: 2 });
-            // Example Flask implementation:
-            /*
-            fetch('/api/analyze', {
+        try {
+            const response = await fetch('/posttext', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: content })
-            })
-            .then(res => res.json())
-            .then(data => setAnalysisResult(data));
-            */
-        }, 2000);
+                body: JSON.stringify({ text: content, user: 'demo-user' })
+            });
+
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+
+            if (data.success && data.results && data.results.length > 0) {
+                const result = data.results[0];
+
+                const suggestions = result.errors.map((err, idx) => ({
+                    id: idx,
+                    type: err.type || 'grammar',
+                    message: err.message,
+                    replacements: err.suggestions
+                }));
+
+                setAnalysisResult({
+                    suggestions: suggestions,
+                    correctedText: result.corrected_text
+                });
+
+                setOverallScore(Math.round(result.correction_score));
+
+                const counts = { correctness: 0, clarity: 0, engagement: 0, delivery: 0 };
+                result.errors.forEach(err => {
+                    const type = (err.type || '').toLowerCase();
+                    if (type === 'grammar' || type === 'spelling' || type === 'punctuation' || type === 'capitalization') counts.correctness++;
+                    else if (type === 'style' || type === 'readability') counts.clarity++;
+                    else if (type === 'tone') counts.delivery++;
+                    else counts.engagement++; // Fallback
+                });
+                setIssueCounts(counts);
+            }
+            if (addNotification) addNotification('Analysis completed successfully!', 'success');
+        } catch (error) {
+            console.error("Analysis failed:", error);
+            if (addNotification) addNotification('Analysis failed. Please try again.', 'error');
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     // Basic word count
@@ -98,6 +122,25 @@ const EditorTab = () => {
     };
 
 
+    // Sync content changes to editable div (Critical for AI updates)
+    useEffect(() => {
+        if (textareaRef.current && content !== textareaRef.current.innerText) {
+            textareaRef.current.innerText = content;
+        }
+    }, [content]);
+
+    const handleDownloadPDF = () => {
+        const element = textareaRef.current;
+        const opt = {
+            margin: 0.5,
+            filename: `${title.trim() || 'SmartText_Doc'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        // Clone the element to style it for PDF if needed, but for now direct dump
+        html2pdf().set(opt).from(element).save();
+    };
 
     return (
         <div className="flex-stack-mobile" style={{
@@ -179,24 +222,44 @@ const EditorTab = () => {
 
 
 
-                    <button
-                        className="hide-on-mobile"
-                        onClick={() => setIsZenMode(!isZenMode)}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '12px',
-                            padding: '12px',
-                            color: 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.2s',
-                            marginLeft: '24px'
-                        }}
-                        title={isZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
-                    >
-                        {isZenMode ? <LuMinimize2 size={20} /> : <LuMaximize2 size={20} />}
-                    </button>
+                    <div className="hide-on-mobile" style={{ display: 'flex', gap: '8px', marginLeft: '24px' }}>
+                        <button
+                            onClick={handleDownloadPDF}
+                            style={{
+                                background: 'transparent',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '12px',
+                                padding: '12px',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.2s',
+                            }}
+                            title="Download as PDF"
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-color)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                            <LuDownload size={20} />
+                        </button>
+                        <button
+                            onClick={() => setIsZenMode(!isZenMode)}
+                            style={{
+                                background: 'transparent',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '12px',
+                                padding: '12px',
+                                color: 'var(--text-secondary)',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.2s',
+                            }}
+                            title={isZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-color)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        >
+                            {isZenMode ? <LuMinimize2 size={20} /> : <LuMaximize2 size={20} />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Editor Surface - ContentEditable */}
@@ -287,7 +350,7 @@ const EditorTab = () => {
                     display: 'flex',
                     flexDirection: 'column'
                 }}>
-                    {activeTab === 'grammar' && <GrammarSection content={content} setContent={setContent} score={overallScore} issueCounts={issueCounts} />}
+                    {activeTab === 'grammar' && <GrammarSection content={content} setContent={setContent} score={overallScore} issueCounts={issueCounts} analysisResult={analysisResult} />}
                     {activeTab === 'genai' && <GenAISection content={content} setContent={setContent} />}
 
                 </div>
@@ -298,168 +361,177 @@ const EditorTab = () => {
 
 // --- Sub-Sections ---
 
-const GrammarSection = ({ content, setContent, score, issueCounts }) => (
-    <>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)', background: 'var(--secondary-bg)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Overall Score</h3>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Advanced</span>
-            </div>
+const GrammarSection = ({ content, setContent, score, issueCounts, analysisResult }) => {
+    const applyTone = async (tone) => {
+        try {
+            const response = await fetch('/generative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: content, user: 'demo-user', tone: tone })
+            });
+            const data = await response.json();
+            if (data.output) setContent(data.output);
+        } catch (error) {
+            console.error("Tone application failed:", error);
+        }
+    };
 
-            {/* Score Ring */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                <div style={{
-                    width: '120px', height: '120px',
-                    borderRadius: '50%',
-                    border: '10px solid var(--secondary-bg)',
-                    position: 'relative',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
+    const applyCorrection = (original, replacement) => {
+        setContent(prev => prev.replace(original, replacement));
+    };
+
+    return (
+        <>
+            <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)', background: 'var(--secondary-bg)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Overall Score</h3>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Advanced</span>
+                </div>
+
+                {/* Score Ring */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
                     <div style={{
-                        position: 'absolute', inset: -10,
+                        width: '120px', height: '120px',
                         borderRadius: '50%',
-                        border: '10px solid transparent',
-                        borderTopColor: '#00C2FF',
-                        borderRightColor: '#00C2FF',
-                        transform: 'rotate(45deg)'
-                    }} />
-                    <div style={{ textAlign: 'center' }}>
-                        <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{score}</span>
+                        border: '10px solid var(--secondary-bg)',
+                        position: 'relative',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <div style={{
+                            position: 'absolute', inset: -10,
+                            borderRadius: '50%',
+                            border: '10px solid transparent',
+                            borderTopColor: '#00C2FF',
+                            borderRightColor: '#00C2FF',
+                            transform: 'rotate(45deg)'
+                        }} />
+                        <div style={{ textAlign: 'center' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{score}</span>
+                        </div>
                     </div>
                 </div>
+                <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Good! A few tweaks needed.</p>
             </div>
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Good! A few tweaks needed.</p>
-        </div>
 
-        {/* Tone Section */}
-        <div style={{ padding: '0 24px' }}>
-            <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Tone</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <ToneButton
-                    icon={<LuBriefcase size={16} />}
-                    label="Professional"
-                    onClick={() => {
-                        // Mock tone change
-                        setContent(prev => prev + " (Professional Tone Applied)");
-                        // In a real app, this would call an AI endpoint
-                    }}
-                />
-                <ToneButton
-                    icon={<LuCoffee size={16} />}
-                    label="Casual"
-                    onClick={() => setContent(prev => prev.replace(/\./g, "!"))}
-                />
-                <ToneButton
-                    icon={<LuGraduationCap size={16} />}
-                    label="Academic"
-                    onClick={() => setContent(prev => "Checking: " + prev)}
-                />
-                <ToneButton
-                    icon={<LuSmile size={16} />}
-                    label="Friendly"
-                    onClick={() => setContent(prev => "Hey there! " + prev)}
-                />
+            {/* Tone Section */}
+            <div style={{ padding: '24px 24px 0' }}>
+                <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Tone</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '24px' }}>
+                    <ToneButton icon={<LuBriefcase size={16} />} label="Professional" onClick={() => applyTone('professional')} />
+                    <ToneButton icon={<LuCoffee size={16} />} label="Casual" onClick={() => applyTone('casual')} />
+                    <ToneButton icon={<LuGraduationCap size={16} />} label="Academic" onClick={() => applyTone('academic')} />
+                    <ToneButton icon={<LuSmile size={16} />} label="Friendly" onClick={() => applyTone('friendly')} />
+                </div>
             </div>
-        </div>
 
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
-            <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)' }}>Issue Types</h4>
+            <div style={{ padding: '0 24px 24px', flex: 1, overflowY: 'auto' }}>
+                <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                    Issues ({issueCounts.correctness + issueCounts.clarity + issueCounts.engagement + issueCounts.delivery})
+                </h4>
 
-            <CategoryCard
-                label="Correctness"
-                count={issueCounts.correctness}
-                color="#FF5F56"
-                icon={<LuTriangleAlert size={18} />}
-                desc="Spelling & grammar errors"
-            />
-            <CategoryCard
-                label="Clarity"
-                count={issueCounts.clarity}
-                color="#00C2FF"
-                icon={<LuBookOpen size={18} />}
-                desc="Hard to read sentences"
-            />
-            <CategoryCard
-                label="Engagement"
-                count={issueCounts.engagement}
-                color="#00FF9D"
-                icon={<LuZap size={18} />}
-                desc="Bland vocabulary"
-            />
-            <CategoryCard
-                label="Delivery"
-                count={issueCounts.delivery}
-                color="#A855F7"
-                icon={<LuMoveRight size={18} />}
-                desc="Wrong tone matches"
-            />
-        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Detailed Suggestions List */}
+                    {analysisResult?.suggestions?.length > 0 ? (
+                        analysisResult.suggestions.map((issue, idx) => (
+                            <div key={idx} style={{
+                                padding: '16px', borderRadius: '12px',
+                                background: 'var(--input-bg)',
+                                borderLeft: '4px solid #FF5F56'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#FF5F56' }}>{issue.type}</span>
+                                </div>
+                                <p style={{ fontSize: '0.95rem', marginBottom: '8px', color: 'var(--text-primary)' }}>{issue.message}</p>
 
-        <div style={{ marginTop: 'auto', padding: '24px', borderTop: '1px solid var(--glass-border)' }}>
-            <button
-                onClick={(e) => {
-                    const btn = e.currentTarget;
-                    const originalText = btn.innerText;
-                    btn.innerText = "Fixing...";
-                    btn.disabled = true;
-                    btn.style.opacity = "0.7";
+                                {issue.replacements?.length > 0 && (
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {issue.replacements.slice(0, 3).map((rep, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => applyCorrection(issue.errorContext || issue.message /* fallback logic needed */, rep)}
+                                                /* Note: Simple text replacement is brittle without offsetting. 
+                                                   For now, displaying is the goal. Interaction is bonus. */
+                                                className="suggestion-chip"
+                                                style={{
+                                                    padding: '4px 12px', borderRadius: '100px',
+                                                    background: 'rgba(0, 194, 255, 0.1)', color: '#00C2FF',
+                                                    border: 'none', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500
+                                                }}
+                                            >
+                                                {rep}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <div style={{ textAlign: 'center', opacity: 0.5, padding: '20px' }}>
+                            <LuCheck size={32} style={{ marginBottom: '8px' }} />
+                            <p>No issues found!</p>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-                    setTimeout(() => {
-                        setContent(prev => prev.replace(/use/g, "utilize").replace(/bad/g, "suboptimal"));
-                        btn.innerText = "All Fixed!";
-                        btn.style.background = "var(--glass-bg)";
-
-                        setTimeout(() => {
-                            btn.innerText = originalText;
-                            btn.disabled = false;
-                            btn.style.opacity = "1";
-                            btn.style.background = "linear-gradient(90deg, #00C2FF, #00FF9D)";
-                        }, 2000);
-                    }, 1500);
-                }}
-                style={{
-                    width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-                    background: 'linear-gradient(90deg, #00C2FF, #00FF9D)',
-                    color: '#000', fontWeight: 700, cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(0, 194, 255, 0.2)',
-                    transition: 'all 0.3s'
-                }}>
-                Fix All Issues (6)
-            </button>
-        </div>
-    </>
-);
+            {/* Fix All Button */}
+            {analysisResult?.correctedText && (
+                <div style={{ marginTop: 'auto', padding: '24px', borderTop: '1px solid var(--glass-border)' }}>
+                    <button
+                        onClick={() => setContent(analysisResult.correctedText)}
+                        style={{
+                            width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+                            background: 'linear-gradient(90deg, #00C2FF, #00FF9D)',
+                            color: '#000', fontWeight: 700, cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(0, 194, 255, 0.2)',
+                            transition: 'all 0.3s'
+                        }}>
+                        Fix All Issues
+                    </button>
+                </div>
+            )}
+        </>
+    );
+};
 
 const GenAISection = ({ content, setContent }) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [instruction, setInstruction] = React.useState('');
 
-    const handleAction = (action) => {
+    const handleAction = async (action) => {
         setIsLoading(true);
-        // Mock backend latency
-        setTimeout(() => {
-            setIsLoading(false);
-            switch (action) {
-                case 'Shorten':
-                    setContent(prev => prev.split(' ').slice(0, Math.floor(prev.split(' ').length * 0.8)).join(' ') + "...");
-                    break;
-                case 'Expand':
-                    setContent(prev => prev + " Furthermore, this topic warrants a deeper investigation into the underlying nuances that shape our understanding.");
-                    break;
-                case 'Formalize':
-                    setContent(prev => prev.replace(/can't/g, "cannot").replace(/won't/g, "will not").replace(/stuff/g, "material"));
-                    break;
-                case 'Simplify':
-                    setContent(prev => prev.replace(/utilize/g, "use").replace(/facilitate/g, "help"));
-                    break;
-                case 'Generate':
-                    setContent(prev => prev + `\n\n[AI Generated based on "${instruction}"]: Here is a drafted paragraph that aligns with your request.`);
-                    setInstruction('');
-                    break;
-                default:
-                    break;
+        try {
+            let tone = 'neutral';
+            if (action === 'Shorten') tone = 'concise';
+            else if (action === 'Expand') tone = 'detailed';
+            else if (action === 'Formalize') tone = 'formal';
+            else if (action === 'Simplify') tone = 'simple';
+            else if (action === 'Generate') tone = instruction;
+
+            const response = await fetch('/generative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: content,
+                    user: 'demo-user',
+                    tone: tone,
+                    model: 'meta-llama/llama-3.2-3b-instruct:free' // Explicitly set reliable model
+                })
+            });
+            const data = await response.json();
+
+            if (data.output) {
+                // If it's a generation action, we might want to append or replace. 
+                // The prompt says "based on the following prompt", so it rewrites.
+                // For consistency with the UI actions which imply rewriting, we replace.
+                setContent(data.output);
+                setInstruction('');
             }
-        }, 1500);
+        } catch (error) {
+            console.error("GenAI Action failed:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

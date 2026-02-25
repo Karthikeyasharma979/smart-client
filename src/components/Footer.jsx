@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LuPenTool } from 'react-icons/lu';
 import { FaTwitter, FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 
 const Footer = () => {
     const navigate = useNavigate();
@@ -32,19 +33,12 @@ const Footer = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '40px', marginBottom: '60px' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-primary)', marginBottom: '24px' }}>
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                background: 'linear-gradient(135deg, var(--accent-color), #2196F3)',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transform: 'rotate(-10deg)',
-                                boxShadow: '0 4px 12px rgba(0, 255, 157, 0.3)'
-                            }}>
-                                <LuPenTool size={18} color="#000" />
-                            </div>
+                            <img src={logo} alt="Logo" style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'contain',
+                                borderRadius: '4px'
+                            }} />
                             <span style={{ fontWeight: 700, fontSize: '1.2rem' }}>Smart Text Analyzer</span>
                         </div>
                         <p style={{ color: 'var(--text-secondary)', maxWidth: '300px' }}>
@@ -54,9 +48,9 @@ const Footer = () => {
 
                     <div style={{ display: 'flex', gap: '60px', flexWrap: 'wrap' }}>
                         {[
-                            { title: 'Product', links: ['Features', 'Pricing', 'Security', 'Business'] },
-                            { title: 'Company', links: ['About', 'Careers', 'Blog', 'Contact'] },
-                            { title: 'Resources', links: ['Community', 'Help Center', 'Partners', 'Status'] }
+                            { title: 'Platform', links: ['Features', 'Technology', 'Security'] },
+                            { title: 'Project', links: ['About', 'Team', 'Contact'] },
+                            { title: 'Community', links: ['Documentation', 'GitHub', 'Feedback'] }
                         ].map((col, i) => (
                             <div key={i}>
                                 <h4 style={{ color: 'var(--text-primary)', marginBottom: '24px' }}>{col.title}</h4>

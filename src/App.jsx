@@ -5,10 +5,10 @@ import Hero from './components/Hero';
 import Features from './components/Features';
 import Compare from './components/Compare';
 import About from './components/About';
-import Footer from './components/Footer';
 import AboutPage from './components/AboutPage';
 import FeaturesPage from './components/FeaturesPage';
-import BlogPage from './components/BlogPage';
+import Footer from './components/Footer';
+
 import Dashboard from './components/Dashboard';
 import WelcomeScreen from './components/WelcomeScreen';
 import { SplineSceneBasic } from './components/SplineSceneBasic';
@@ -75,7 +75,7 @@ function App() {
               } />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/about" element={<AboutPage />} />
-              <Route path="/blog" element={<BlogPage />} />
+
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/demo" element={

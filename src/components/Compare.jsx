@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaTimes } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 
 const Compare = () => {
     const [activeTab, setActiveTab] = useState(0);
@@ -121,7 +122,12 @@ const Compare = () => {
                                 <thead>
                                     <tr style={{ background: 'var(--table-header-bg)' }}>
                                         <th style={{ padding: '24px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 500 }}>Features</th>
-                                        <th style={{ padding: '24px', textAlign: 'center', color: 'var(--accent-color)', fontSize: '1.1rem' }}>Smart Text Analyzer</th>
+                                        <th style={{ padding: '24px', textAlign: 'center', color: 'var(--accent-color)', fontSize: '1.1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                <img src={logo} alt="" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                                                Smart Text Analyzer
+                                            </div>
+                                        </th>
                                         <th style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Basic Tools</th>
                                     </tr>
                                 </thead>
@@ -146,14 +152,16 @@ const Compare = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                                                {row.them === true ? (
-                                                    <FaCheck color="var(--text-secondary)" />
-                                                ) : row.them === false ? (
-                                                    <FaTimes color="var(--text-secondary)" />
-                                                ) : (
-                                                    <span style={{ fontSize: '0.9rem' }}>{row.them}</span>
-                                                )}
+                                            <td style={{ padding: '24px', color: 'var(--text-secondary)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    {row.them === true ? (
+                                                        <FaCheck color="var(--text-secondary)" />
+                                                    ) : row.them === false ? (
+                                                        <FaTimes color="var(--text-secondary)" />
+                                                    ) : (
+                                                        <span style={{ fontSize: '0.9rem' }}>{row.them}</span>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

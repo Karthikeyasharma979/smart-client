@@ -1,27 +1,27 @@
-import robotImg from '../assets/robot_stack.png';
+
 import { SplineScene } from './ui/splite';
 
 const About = () => {
     const cards = [
         {
             id: '01',
-            title: 'Real-time Analysis',
-            desc: 'Get instant feedback on your writing grammar, tone, and style as you type.',
+            title: 'Smart Editor',
+            desc: 'A clean, distraction-free environment for drafting your content.',
         },
         {
             id: '02',
-            title: 'Secure & Private',
-            desc: 'Your content is encrypted and processed locally. We value your data privacy.',
+            title: 'Detailed Analytics',
+            desc: 'Gain deep insights into your writing style, tone, and readability scores.',
         },
         {
             id: '03',
-            title: 'Multi-Language',
-            desc: 'Support for over 30+ languages with native-level nuance and context awareness.',
+            title: 'AI Powered',
+            desc: 'Leverages advanced AI to provide intelligent text insights.',
         },
         {
             id: '04',
-            title: 'Cloud Sync',
-            desc: 'Access your documents from any device, anywhere, with seamless synchronization.',
+            title: 'Direct Feedback',
+            desc: 'Get immediate visual results for summaries and plagiarism checks.',
         }
     ];
 

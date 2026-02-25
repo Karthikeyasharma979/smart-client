@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { LuSparkles, LuZap, LuScanSearch, LuBrainCircuit, LuLock, LuCheck } from 'react-icons/lu';
+import { LuSparkles, LuZap, LuScanSearch, LuBrainCircuit, LuLock, LuCheck, LuSearch, LuFileText } from 'react-icons/lu';
 
 const FeaturesPage = () => {
     useEffect(() => {
@@ -145,10 +145,10 @@ const FeaturesPage = () => {
                                     {/* User Bubble */}
                                     <div style={{
                                         alignSelf: 'flex-end',
-                                        background: 'rgba(255,255,255,0.1)',
+                                        background: 'var(--bg-primary)',
                                         backdropFilter: 'blur(5px)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        color: '#fff',
+                                        border: '1px solid var(--glass-border)',
+                                        color: 'var(--text-primary)',
                                         padding: '16px 24px',
                                         borderRadius: '24px 24px 4px 24px',
                                         marginBottom: '32px',
@@ -204,58 +204,142 @@ const FeaturesPage = () => {
                                     }} />
 
                                 </div>
-                            ) : (
+                            ) : feature.id === 'summaries' ? (
                                 <div className="glass-panel" style={{
-                                    height: '400px',
-                                    width: '100%',
-                                    borderRadius: '32px',
+                                    height: '400px', width: '100%', borderRadius: '32px',
                                     border: '1px solid var(--glass-border)',
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 20px 50px rgba(0,0,0,0.2)'
+                                    background: 'linear-gradient(135deg, rgba(255,215,0,0.05), rgba(0,0,0,0))',
+                                    position: 'relative', overflow: 'hidden',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
-                                    {/* Abstract Visual Representation for other items */}
+                                    {/* Left: Long Doc */}
                                     <div style={{
-                                        position: 'absolute',
-                                        top: '50%',
-                                        left: '50%',
-                                        transform: 'translate(-50%, -50%)',
-                                        width: '300px',
-                                        height: '300px',
-                                        background: `radial-gradient(circle, ${index % 2 === 0 ? 'var(--accent-color)' : '#9D00FF'} 0%, transparent 70%)`,
-                                        opacity: 0.1,
-                                        filter: 'blur(40px)',
-                                        borderRadius: '50%'
-                                    }} />
-
-                                    <div style={{
-                                        position: 'absolute',
-                                        inset: 0,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
+                                        width: '120px', height: '160px', background: 'rgba(255,255,255,0.05)',
+                                        borderRadius: '12px', border: '1px solid var(--glass-border)',
+                                        padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px',
+                                        transform: 'translateX(-40px) rotate(-5deg)'
                                     }}>
-                                        <feature.icon size={120} color="rgba(255,255,255,0.05)" style={{ filter: 'drop-shadow(0 0 20px rgba(0,255,157,0.1))' }} />
+                                        {[...Array(6)].map((_, i) => (
+                                            <div key={i} style={{ height: '4px', width: '100%', background: 'var(--text-secondary)', opacity: 0.3, borderRadius: '2px' }} />
+                                        ))}
+                                    </div>
+                                    {/* Arrow */}
+                                    <div style={{ position: 'absolute', zIndex: 10, background: '#FFD700', borderRadius: '50%', padding: '12px', boxShadow: '0 0 20px rgba(255, 215, 0, 0.4)' }}>
+                                        <LuZap size={24} color="#000" />
+                                    </div>
+                                    {/* Right: Summary Card */}
+                                    <div style={{
+                                        width: '140px', height: '180px', background: 'var(--bg-primary)',
+                                        borderRadius: '16px', border: '1px solid #FFD700',
+                                        padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px',
+                                        transform: 'translateX(40px) rotate(5deg)',
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                                    }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#FFD700' }}>Summary</div>
+                                        {[...Array(3)].map((_, i) => (
+                                            <div key={i} style={{ display: 'flex', gap: '8px' }}>
+                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#FFD700', marginTop: '6px' }} />
+                                                <div style={{ height: '4px', width: '80%', background: 'var(--text-primary)', opacity: 0.8, borderRadius: '2px', marginTop: '4px' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : feature.id === 'plagiarism' ? (
+                                <div className="glass-panel" style={{
+                                    height: '400px', width: '100%', borderRadius: '32px',
+                                    border: '1px solid var(--glass-border)',
+                                    background: 'linear-gradient(135deg, rgba(255, 95, 86, 0.05), rgba(0,0,0,0))',
+                                    position: 'relative', overflow: 'hidden',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'
+                                }}>
+                                    <div style={{
+                                        width: '200px', background: 'rgba(255,255,255,0.05)',
+                                        borderRadius: '16px', border: '1px solid var(--glass-border)',
+                                        padding: '24px', position: 'relative', overflow: 'hidden'
+                                    }}>
+                                        <div style={{ height: '8px', width: '100%', background: 'var(--text-secondary)', opacity: 0.2, borderRadius: '4px', marginBottom: '16px' }} />
+                                        <div style={{ height: '8px', width: '90%', background: 'var(--text-secondary)', opacity: 0.2, borderRadius: '4px', marginBottom: '16px' }} />
+                                        <div style={{ height: '8px', width: '100%', background: '#FF5F56', opacity: 0.8, borderRadius: '4px', marginBottom: '16px', boxShadow: '0 0 10px rgba(255, 95, 86, 0.4)' }} />
+                                        <div style={{ height: '8px', width: '80%', background: 'var(--text-secondary)', opacity: 0.2, borderRadius: '4px' }} />
+
+                                        {/* Scanner Line */}
+                                        <div style={{
+                                            position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
+                                            background: '#FF5F56', boxShadow: '0 0 10px #FF5F56',
+                                            animation: 'scan 3s infinite ease-in-out'
+                                        }} />
                                     </div>
 
-                                    {/* Floating Elements (Skeleton) */}
                                     <div style={{
-                                        position: 'absolute',
-                                        bottom: '40px',
-                                        right: '40px',
-                                        left: '40px',
-                                        padding: '20px',
-                                        background: 'var(--glass-bg)',
-                                        backdropFilter: 'blur(10px)',
-                                        borderRadius: '16px',
-                                        border: '1px solid var(--glass-border)',
-                                        transform: 'translateY(20px)',
-                                        opacity: 0.8
+                                        marginTop: '24px', background: '#FF5F56', color: '#fff',
+                                        padding: '8px 20px', borderRadius: '100px', fontWeight: 700, fontSize: '0.9rem',
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        boxShadow: '0 10px 20px rgba(255, 95, 86, 0.3)'
                                     }}>
-                                        <div style={{ height: '8px', width: '60%', background: 'var(--text-secondary)', borderRadius: '4px', marginBottom: '12px', opacity: 0.5 }} />
-                                        <div style={{ height: '8px', width: '90%', background: 'var(--text-secondary)', borderRadius: '4px', marginBottom: '12px', opacity: 0.3 }} />
-                                        <div style={{ height: '8px', width: '75%', background: 'var(--text-secondary)', borderRadius: '4px', opacity: 0.4 }} />
+                                        <LuSearch size={16} /> Match Found: 12%
+                                    </div>
+                                    <style>{`@keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 50% { top: 90%; opacity: 1; } }`}</style>
+                                </div>
+                            ) : feature.id === 'qa' ? (
+                                <div className="glass-panel" style={{
+                                    height: '400px', width: '100%', borderRadius: '32px',
+                                    border: '1px solid var(--glass-border)',
+                                    background: 'linear-gradient(135deg, rgba(80, 200, 255, 0.05), rgba(0,0,0,0))',
+                                    position: 'relative', overflow: 'hidden',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <LuFileText size={100} color="rgba(80, 200, 255, 0.2)" />
+
+                                    {/* Chat Bubbles */}
+                                    <div style={{
+                                        position: 'absolute', top: '30%', right: '20%',
+                                        background: '#fff', color: '#000', padding: '12px 20px',
+                                        borderRadius: '20px 20px 4px 20px', fontSize: '0.9rem', fontWeight: 600,
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                                        animation: 'float 6s infinite ease-in-out'
+                                    }}>
+                                        Summarize risks?
+                                    </div>
+                                    <div style={{
+                                        position: 'absolute', bottom: '25%', left: '20%',
+                                        background: 'var(--bg-primary)', border: '1px solid #50C8FF', color: '#50C8FF',
+                                        padding: '12px 20px', borderRadius: '20px 20px 20px 4px', fontSize: '0.9rem',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                                        animation: 'float 6s infinite ease-in-out 2s'
+                                    }}>
+                                        <LuCheck size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                                        Risk factors include...
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="glass-panel" style={{
+                                    height: '400px', width: '100%', borderRadius: '32px',
+                                    border: '1px solid var(--glass-border)',
+                                    background: 'linear-gradient(135deg, rgba(200, 200, 255, 0.05), rgba(0,0,0,0))',
+                                    position: 'relative', overflow: 'hidden',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <div style={{
+                                        width: '180px', height: '220px',
+                                        background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
+                                        borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        position: 'relative'
+                                    }}>
+                                        <LuLock size={64} color="var(--text-primary)" />
+
+                                        {/* Floating Shields */}
+                                        <div style={{
+                                            position: 'absolute', top: -20, right: -20,
+                                            padding: '8px 16px', background: '#00ef8b', color: '#000',
+                                            borderRadius: '100px', fontSize: '0.8rem', fontWeight: 800,
+                                            boxShadow: '0 10px 20px rgba(0, 239, 139, 0.3)'
+                                        }}>SOC2</div>
+                                        <div style={{
+                                            position: 'absolute', bottom: -20, left: -20,
+                                            padding: '8px 16px', background: 'var(--text-primary)', color: 'var(--bg-primary)',
+                                            borderRadius: '100px', fontSize: '0.8rem', fontWeight: 800,
+                                            boxShadow: '0 10px 20px rgba(0,0,0,0.3)'
+                                        }}>AES-256</div>
                                     </div>
                                 </div>
                             )}

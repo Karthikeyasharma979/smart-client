@@ -108,9 +108,10 @@ const Features = () => {
             <div className="container feature-container">
 
                 {/* Main Feature Showcase (Interactive) */}
-                <div className="feature-showcase">
+                <div className="feature-showcase" style={{ gap: '80px' }}>
                     {/* Text Side */}
                     <div className="feature-text-content" style={{ position: 'relative' }}>
+
                         <h2>
                             {activeData.title} <br />
                             <span style={{ color: activeData.subtitleColor, transition: 'color 0.3s' }}>{activeData.subtitle}</span>
@@ -131,37 +132,49 @@ const Features = () => {
                             Learn more
                         </button>
 
-                        {/* Floating Interaction Icons (Left Side) */}
-                        <div className="feature-side-buttons">
+                        {/* Feature Navigation Tabs */}
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '40px' }}>
                             {featuresData.map((feature, index) => (
                                 <button
                                     key={feature.id}
                                     onClick={() => setActiveFeature(index)}
-                                    className="floating-icon"
                                     style={{
-                                        position: 'relative',
-                                        margin: 0,
-                                        cursor: 'pointer',
+                                        width: '50px',
+                                        height: '50px',
+                                        borderRadius: '50%',
                                         border: 'none',
-                                        background: activeFeature === index ? '#fff' : 'rgba(255,255,255,0.1)',
-                                        color: activeFeature === index ? '#000' : '#fff',
+                                        background: activeFeature === index ? 'var(--accent-color, #fff)' : 'rgba(255,255,255,0.05)',
+                                        color: activeFeature === index ? '#000' : 'rgba(255,255,255,0.5)',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
                                         transition: 'all 0.3s ease',
-                                        transform: activeFeature === index ? 'scale(1.1)' : 'scale(1)'
+                                        transform: activeFeature === index ? 'scale(1.1)' : 'scale(1)',
+                                        boxShadow: activeFeature === index ? '0 0 20px rgba(255,255,255,0.3)' : 'none'
                                     }}>
-                                    <span style={{ fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {feature.icon}
-                                    </span>
+                                    <span style={{ fontSize: '20px' }}>{feature.icon}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Mockup Side - Dynamic Content */}
-                    <div className="mockup-stage">
-                        <div className="mockup-elements">
+                    <div className="mockup-stage" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="mockup-elements" style={{ position: 'relative', width: '100%', height: 'auto' }}>
 
                             {/* Card 1: Main Dashboard */}
-                            <div className="dashboard-card card-main" style={{ top: '150px', left: '0', width: '100%', maxWidth: '650px', height: 'auto', minHeight: '360px' }}>
+                            <div className="dashboard-card card-main" style={{
+                                position: 'relative',
+                                top: '0',
+                                left: '0',
+                                width: '100%',
+                                maxWidth: '650px',
+                                height: 'auto',
+                                minHeight: '360px',
+                                transform: 'none',
+                                margin: '0 auto'
+                            }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                                     <div>
                                         <h3 style={{ fontSize: '1.4rem', margin: 0, fontWeight: 700 }}>{activeData.mockup.mainTitle}</h3>

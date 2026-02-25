@@ -24,7 +24,7 @@ const ActivityPulse = () => {
             minHeight: '200px'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Activity Pulse</h3>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>System Status</h3>
                 <div style={{
                     padding: '4px 12px',
                     borderRadius: '100px',
@@ -38,7 +38,7 @@ const ActivityPulse = () => {
                     gap: '6px'
                 }}>
                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00FF9D', animation: 'pulse 1s infinite' }} />
-                    Live
+                    Online
                 </div>
             </div>
 
@@ -59,8 +59,8 @@ const ActivityPulse = () => {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                <span>09:00 AM</span>
-                <span>Now</span>
+                <span>Server Load</span>
+                <span>Optimal</span>
             </div>
         </div>
     );

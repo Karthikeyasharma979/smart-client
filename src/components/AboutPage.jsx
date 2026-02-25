@@ -27,9 +27,9 @@ const AboutPage = () => {
                 <div className="container" style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '40px' }}>
                         {[
-                            { label: 'Daily Users', value: '30M+' },
-                            { label: 'Enterprise Teams', value: '50K+' },
-                            { label: 'Words Refined', value: '100B+' }
+                            { label: 'Powerful Tools', value: '5' },
+                            { label: 'AI Personas', value: '3' },
+                            { label: 'Unified Platform', value: '1' }
                         ].map((stat, i) => (
                             <div key={i} style={{ flex: 1, minWidth: '200px' }}>
                                 <div style={{
