@@ -35,6 +35,8 @@ import {
 } from 'react-icons/lu';
 import html2pdf from 'html2pdf.js';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const EditorTab = ({ addNotification }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
@@ -53,7 +55,7 @@ const EditorTab = ({ addNotification }) => {
         setAnalysisResult(null);
 
         try {
-            const response = await fetch('/posttext', {
+            const response = await fetch(`${API_URL}/posttext`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: content, user: 'demo-user' })
@@ -364,7 +366,7 @@ const EditorTab = ({ addNotification }) => {
 const GrammarSection = ({ content, setContent, score, issueCounts, analysisResult }) => {
     const applyTone = async (tone) => {
         try {
-            const response = await fetch('/generative', {
+            const response = await fetch(`${API_URL}/generative`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: content, user: 'demo-user', tone: tone })
@@ -508,7 +510,7 @@ const GenAISection = ({ content, setContent }) => {
             else if (action === 'Simplify') tone = 'simple';
             else if (action === 'Generate') tone = instruction;
 
-            const response = await fetch('/generative', {
+            const response = await fetch(`${API_URL}/generative`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

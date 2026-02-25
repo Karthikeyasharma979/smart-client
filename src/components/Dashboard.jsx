@@ -32,6 +32,8 @@ import { useNavigate } from 'react-router-dom';
 import EditorTab from './EditorTab';
 import ActivityPulse from './ActivityPulse';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -629,7 +631,7 @@ const ChatTab = ({ addNotification }) => {
             const selectedModelId = MODEL_MAP[activeModel] || 'meta-llama/llama-3.2-3b-instruct:free';
 
             try {
-                const response = await fetch('/generative', {
+                const response = await fetch(`${API_URL}/generative`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1169,7 +1171,7 @@ const SummarizerTab = ({ addNotification }) => {
 
         try {
             // 2. Call Backend API
-            const response = await fetch('/summary', {
+            const response = await fetch(`${API_URL}/summary`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1706,7 +1708,7 @@ const DocQATab = ({ addNotification }) => {
             formData.append('file', selectedFile);
 
             try {
-                const response = await fetch('/upload', {
+                const response = await fetch(`${API_URL}/upload`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -1753,7 +1755,7 @@ const DocQATab = ({ addNotification }) => {
             setIsTyping(true);
 
             try {
-                const response = await fetch('/query', {
+                const response = await fetch(`${API_URL}/query`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: userText })
