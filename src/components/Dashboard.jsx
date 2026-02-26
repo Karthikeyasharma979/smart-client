@@ -562,10 +562,10 @@ const ToolCard = ({ title, desc, icon: Icon, color, onClick }) => {
 const ChatTab = ({ addNotification }) => {
     // 1. Personas Configuration
     const personas = {
-        friendly: { id: 'friendly', name: 'Friendly', icon: LuSparkles, color: '#00FF9D', greeting: "Hi there! I'm here to help you write something amazing today. 🌟" },
-        professional: { id: 'professional', name: 'Professional', icon: LuPenTool, color: '#00C2FF', greeting: "Greetings. I am ready to assist with your professional documentation." },
-        creative: { id: 'creative', name: 'Creative', icon: LuZap, color: '#D946EF', greeting: "Let's make some magic! What wild ideas are we cooking up? 🎨" },
-        academic: { id: 'academic', name: 'Academic', icon: LuBrainCircuit, color: '#F59E0B', greeting: "Welcome. Let us analyze your text for rigor and clarity." }
+        friendly: { id: 'friendly', name: 'Friendly', icon: LuSparkles, color: '#00FF9D', greeting: "Hi there! I'm here to help you write something amazing today. 🌟", prompts: ['Write a thank you note', 'Explain quantum mechanics simply', 'Suggest a dinner recipe', 'Draft a friendly email'] },
+        professional: { id: 'professional', name: 'Professional', icon: LuPenTool, color: '#00C2FF', greeting: "Greetings. I am ready to assist with your professional documentation.", prompts: ['Draft an executive summary', 'Write a formal email to a client', 'Prepare meeting minutes', 'Review my business proposal'] },
+        creative: { id: 'creative', name: 'Creative', icon: LuZap, color: '#D946EF', greeting: "Let's make some magic! What wild ideas are we cooking up? 🎨", prompts: ['Write a short sci-fi story', 'Brainstorm marketing slogans', 'Compose a catchy poem', 'Suggest creative startup names'] },
+        academic: { id: 'academic', name: 'Academic', icon: LuBrainCircuit, color: '#F59E0B', greeting: "Welcome. Let us analyze your text for rigor and clarity.", prompts: ['Summarize a research paper', 'Format citations in APA', 'Suggest a thesis topic', 'Explain a complex academic theory'] }
     };
 
     const [activePersona, setActivePersona] = useState('friendly');
@@ -574,13 +574,12 @@ const ChatTab = ({ addNotification }) => {
     const [input, setInput] = useState('');
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [activeModel, setActiveModel] = useState('Gemini Fast (Free)');
+    const [activeModel, setActiveModel] = useState('Gemini 3 Flash Preview');
 
     const MODEL_MAP = {
-        'Gemini Fast (Free)': 'google/gemini-2.0-flash-exp:free',
-        'Smart GPT (Free)': 'openai/gpt-oss-120b:free',
-        'DeepSeek (Free)': 'tngtech/deepseek-r1t2-chimera:free',
-        'Llama 3.1 (Free)': 'meta-llama/llama-3.1-405b-instruct:free'
+        'Gemini 3 Flash Preview': 'gemini-2.5-flash',
+        'Gemini 1.5 Flash': 'gemini-2.5-flash',
+        'Gemini 2.0 Flash': 'gemini-2.5-flash'
     };
 
     const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
@@ -627,8 +626,7 @@ const ChatTab = ({ addNotification }) => {
 
         const fetchAIResponse = async () => {
 
-
-            const selectedModelId = MODEL_MAP[activeModel] || 'meta-llama/llama-3.2-3b-instruct:free';
+            const selectedModelId = MODEL_MAP[activeModel] || 'gemini-2.5-flash';
 
             try {
                 const response = await fetch(`${API_URL}/generative`, {
@@ -732,7 +730,7 @@ const ChatTab = ({ addNotification }) => {
 
                     {/* Prompt Cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: '600px' }}>
-                        {['Brainstorm creative ideas', 'Draft a professional email', 'Summarize this document', 'Debug my code'].map((prompt, i) => (
+                        {personas[activePersona].prompts.map((prompt, i) => (
                             <button key={i}
                                 onClick={() => handleSend(prompt)}
                                 style={{
@@ -833,7 +831,7 @@ const ChatTab = ({ addNotification }) => {
                                         width: 'max-content', minWidth: '160px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', zIndex: 1000,
                                         maxHeight: '240px', overflowY: 'auto'
                                     }}>
-                                        {['Gemini 1.5 Pro', 'GPT-4o', 'Deepseek', 'Llama 3 70B'].map(model => (
+                                        {Object.keys(MODEL_MAP).map(model => (
                                             <button key={model}
                                                 onClick={() => { setActiveModel(model); setIsModelMenuOpen(false); }}
                                                 style={{
@@ -904,17 +902,7 @@ const ChatTab = ({ addNotification }) => {
                                 )}
                             </div>
 
-                            {/* Right: Actions */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                                <input type="file" ref={imageInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleImageSelect} />
-                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileSelect} />
-
-                                <button onClick={() => imageInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-                                    <LuImage size={20} />
-                                </button>
-                                <button onClick={() => fileInputRef.current.click()} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#2a2a2a', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-                                    <LuPaperclip size={20} />
-                                </button>
                                 <button onClick={() => handleSend()} style={{ width: '36px', height: '36px', borderRadius: '8px', background: activeColor, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '8px' }}>
                                     <LuSend color="#000" size={18} />
                                 </button>
@@ -1037,17 +1025,6 @@ const ChatTab = ({ addNotification }) => {
                     {/* Chat Input Area */}
                     <div style={{ padding: '24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid var(--glass-border)' }}>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <button
-                                onClick={() => setIsVoiceMode(true)}
-                                style={{
-                                    width: '48px', height: '48px', borderRadius: '50%', cursor: 'pointer',
-                                    background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
-                                }}
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
-                            </button>
-
                             <div style={{ flex: 1, position: 'relative' }}>
                                 <input
                                     type="text"

@@ -322,12 +322,16 @@ h3 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 @keyframes typing {
@@ -741,7 +745,7 @@ h3 {
 
 @media (min-width: 768px) {
   .editor-header-padding {
-    padding: 32px 48px 0;
+    padding: 32px 24px 0;
   }
 }
 
@@ -751,7 +755,7 @@ h3 {
 
 @media (min-width: 768px) {
   .editor-content-padding {
-    padding: 0 48px 48px;
+    padding: 0 24px 48px;
   }
 }
 
@@ -1860,4 +1864,88 @@ h3 {
     clip: rect(49px, 9999px, 1px, 0);
     transform: skew(0.39deg);
   }
+}
+
+/* --- Editor Rich Text Restoration --- */
+/* Tailwind removes default styles, so we must add them back for the rich-text editor */
+
+.editor-min-height h1 {
+  font-size: 2.5em;
+  font-weight: 800;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+}
+
+.editor-min-height h2 {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+.editor-min-height b,
+.editor-min-height strong {
+  font-weight: bold;
+}
+
+.editor-min-height i,
+.editor-min-height em {
+  font-style: italic;
+}
+
+.editor-min-height u {
+  text-decoration: underline;
+}
+
+.editor-min-height blockquote {
+  border-left: 4px solid var(--accent-color);
+  padding: 0.5em 0 0.5em 1.5em;
+  /* Updated padding */
+  margin: 1.5em 0;
+  /* Updated margin */
+  color: var(--text-secondary);
+  font-style: italic;
+  background: rgba(0, 255, 157, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+.editor-min-height ul {
+  list-style-type: disc;
+  padding-left: 2rem;
+  /* Add indentation */
+  margin-top: 1em;
+  /* Add vertical rhythm */
+  margin-bottom: 1em;
+}
+
+.editor-min-height ol {
+  list-style-type: decimal;
+  padding-left: 2rem;
+  /* Add indentation */
+  margin-top: 1em;
+  /* Add vertical rhythm */
+  margin-bottom: 1em;
+}
+
+.editor-min-height li {
+  margin-bottom: 0.25em;
+}
+
+/* Allow nested lists to have different bullets if desired, but default is fine */
+
+.editor-min-height pre {
+  background: var(--input-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  border: 1px solid var(--glass-border);
+}
+
+.editor-min-height code {
+  font-family: inherit;
 }
