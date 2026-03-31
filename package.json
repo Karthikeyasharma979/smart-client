@@ -23,6 +23,8 @@
     "gsap": "^3.14.2",
     "html2pdf.js": "^0.13.0",
     "lucide-react": "^0.562.0",
+    "quill": "^2.0.3",
+    "quill-cursors": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
@@ -30,7 +32,10 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.182.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "y-quill": "^1.0.0",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.30"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

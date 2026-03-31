@@ -12,6 +12,10 @@ import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import WelcomeScreen from './components/WelcomeScreen';
 import { SplineSceneBasic } from './components/SplineSceneBasic';
+import { ShortcutProvider } from './contexts/ShortcutContext';
+import ScrollProgressBar from './components/ScrollProgressBar';
+import ScrollReveal from './components/ScrollReveal';
+import ScrollToTop from './components/ScrollToTop';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -21,6 +25,8 @@ const Layout = ({ children }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {!isDashboard && <Navbar />}
+      {!isDashboard && <ScrollProgressBar />}
+      {!isDashboard && <ScrollToTop />}
       <main style={{ flex: 1 }}>
         {children}
       </main>
@@ -63,28 +69,30 @@ function App() {
           overflow: loading ? 'hidden' : 'visible'
         }}>
         <Router>
-          <Layout>
-            <Routes>
-              <Route path="/" element={
-                <>
-                  <Hero />
-                  <Features />
-                  <Compare />
-                  <About />
-                </>
-              } />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/about" element={<AboutPage />} />
+          <ShortcutProvider>
+            <Layout>
+              <Routes>
+                <Route path="/" element={
+                  <>
+                    <Hero />
+                    <ScrollReveal><Features /></ScrollReveal>
+                    <ScrollReveal><Compare /></ScrollReveal>
+                    <ScrollReveal><About /></ScrollReveal>
+                  </>
+                } />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/about" element={<AboutPage />} />
 
 
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/demo" element={
-                <div className="container py-20 min-h-screen flex items-center justify-center">
-                  <SplineSceneBasic />
-                </div>
-              } />
-            </Routes>
-          </Layout>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/demo" element={
+                  <div className="container py-20 min-h-screen flex items-center justify-center">
+                    <SplineSceneBasic />
+                  </div>
+                } />
+              </Routes>
+            </Layout>
+          </ShortcutProvider>
         </Router>
       </div>
     </>

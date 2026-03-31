@@ -134,10 +134,10 @@ const Compare = () => {
                                 <tbody>
                                     {[
                                         { feature: 'Grammar & Spelling', us: true, them: true },
-                                        { feature: 'Tone Detection', us: true, them: false },
-                                        { feature: 'Full-Sentence Rewrites', us: true, them: false },
-                                        { feature: 'Custom Style Guides', us: true, them: false },
-                                        { feature: 'Plagiarism Detection', us: true, them: 'Limited' },
+                                        { feature: 'Web Search Integration', us: true, them: false },
+                                        { feature: 'Interactive PDF/Docs Chat', us: true, them: false },
+                                        { feature: 'Real-time Readability', us: true, them: false },
+                                        { feature: 'Tone & Style Detection', us: true, them: 'Limited' },
                                     ].map((row, i) => (
                                         <tr key={i} style={{ borderTop: '1px solid var(--table-border)' }}>
                                             <td style={{ padding: '24px', color: 'var(--text-primary)', fontWeight: 500 }}>{row.feature}</td>

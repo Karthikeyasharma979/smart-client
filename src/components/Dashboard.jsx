@@ -31,6 +31,9 @@ import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import EditorTab from './EditorTab';
 import ActivityPulse from './ActivityPulse';
+import ShortcutCustomizer from './ShortcutCustomizer';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import ScrollReveal from './ScrollReveal';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -46,6 +49,15 @@ const Dashboard = () => {
     ]);
     const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/notionists/svg?seed=Guest');
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showShortcutCustomizer, setShowShortcutCustomizer] = useState(false);
+    const containerRef = React.useRef(null);
+    const { scrollYProgress } = useScroll({ container: containerRef });
+    const scaleX = useSpring(scrollYProgress, {
+        stiffness: 100,
+        damping: 30,
+        restDelta: 0.001
+    });
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -104,7 +116,7 @@ const Dashboard = () => {
     };
 
     return (
-        <div style={{
+        <div className="dashboard-responsive-container" style={{
             minHeight: '100vh',
             background: 'var(--bg-primary)',
             display: 'flex',
@@ -126,28 +138,38 @@ const Dashboard = () => {
                 height: '100vh',
                 zIndex: 50
             }}>
-                <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <img src={logo} alt="Logo" style={{
-                        width: '70px',
-                        height: '70px',
+                        width: '45px',
+                        height: '45px',
                         objectFit: 'contain',
                         borderRadius: '6px'
                     }} />
-                    <span style={{ fontSize: '1.25rem', fontWeight: 700, whiteSpace: 'nowrap' }}>STA</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, whiteSpace: 'nowrap' }}>STA</span>
                 </div>
 
-                <nav style={{ flex: 1, padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <nav style={{ 
+                    flex: 1, 
+                    padding: '24px 16px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '8px',
+                    overflowY: 'auto',
+                    scrollbarWidth: 'none',
+                    maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
+                }}>
                     <SidebarItem icon={LuLayoutDashboard} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                     <SidebarItem icon={LuPenTool} label="Write" active={activeTab === 'editor'} onClick={() => setActiveTab('editor')} />
                     <div style={{ height: '1px', background: 'var(--glass-border)', margin: '16px 0' }} />
                     <SidebarItem icon={LuSparkles} label="AI Chat" active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
                     <SidebarItem icon={LuZap} label="Summarizer" active={activeTab === 'summarizer'} onClick={() => setActiveTab('summarizer')} />
-                    <SidebarItem icon={LuScanSearch} label="Plagiarism Check" active={activeTab === 'plagiarism'} onClick={() => setActiveTab('plagiarism')} />
+                    <SidebarItem icon={LuScanSearch} label="Text Comparison" active={activeTab === 'plagiarism'} onClick={() => setActiveTab('plagiarism')} />
                     <SidebarItem icon={LuBrainCircuit} label="Document Q&A" active={activeTab === 'doc-qa'} onClick={() => setActiveTab('doc-qa')} />
                 </nav>
 
-                <div style={{ padding: '24px 16px', borderTop: '1px solid var(--glass-border)' }}>
-                    {/* <SidebarItem icon={LuSettings} label="Settings" /> */}
+                <div style={{ padding: '24px 16px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <SidebarItem icon={LuSettings} label="Shortcuts" onClick={() => setShowShortcutCustomizer(true)} />
                     <SidebarItem icon={LuLogOut} label="Exit Dashboard" onClick={handleLogout} />
                 </div>
             </aside>
@@ -204,7 +226,7 @@ const Dashboard = () => {
                         <div style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {activeTab === 'chat' ? 'AI Assistant' :
                                 activeTab === 'summarizer' ? 'Summarizer' :
-                                    activeTab === 'plagiarism' ? 'Plagiarism' :
+                                    activeTab === 'plagiarism' ? 'Text Comparison' :
                                         activeTab === 'doc-qa' ? 'Doc Q&A' : 'Dashboard'}
                         </div>
                     </div>
@@ -320,9 +342,30 @@ const Dashboard = () => {
                     </div>
                 </header>
 
-                <div style={{ flex: 1, padding: isMobile ? '16px' : '32px', overflowY: 'auto' }}>
+                <motion.div 
+                    ref={containerRef}
+                    style={{ 
+                        flex: 1, 
+                        padding: isMobile ? '16px' : '32px', 
+                        overflowY: 'auto',
+                        scrollBehavior: 'smooth',
+                        position: 'relative'
+                    }}
+                >
+                    {/* Dashboard Progress bar */}
+                    <motion.div 
+                        style={{ 
+                            position: 'absolute', 
+                            top: 0, left: 0, right: 0, 
+                            height: '3px', 
+                            background: 'var(--accent-color)', 
+                            scaleX, 
+                            transformOrigin: '0%', 
+                            zIndex: 10 
+                        }} 
+                    />
                     {renderContent()}
-                </div>
+                </motion.div>
             </main>
 
             {/* User Profile Modal */}
@@ -367,6 +410,18 @@ const Dashboard = () => {
                                 Close
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showShortcutCustomizer && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }} onClick={() => setShowShortcutCustomizer(false)}>
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <ShortcutCustomizer onClose={() => setShowShortcutCustomizer(false)} />
                     </div>
                 </div>
             )}
@@ -418,86 +473,101 @@ const OverviewTab = ({ setActiveTab }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
         <div className="dashboard-grid-top">
             {/* Welcome Card */}
-            <div className="animate-enter responsive-padding" style={{
-                background: 'rgba(0,0,0,0.02)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: '24px',
-                position: 'relative',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
-            }}>
-                {/* Aurora Background Layer */}
-                <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'radial-gradient(circle at 50% 50%, rgba(0,255,157,0.15), transparent 50%), radial-gradient(circle at 0% 0%, rgba(0,194,255,0.1), transparent 50%)',
-                    filter: 'blur(40px)',
-                    animation: 'aurora 10s infinite alternate',
-                    zIndex: 0
-                }} />
+            <ScrollReveal direction="up" distance={30}>
+                <div className="animate-enter responsive-padding" style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '24px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    minHeight: '260px'
+                }}>
+                    {/* Aurora Background Layer */}
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'radial-gradient(circle at 50% 50%, rgba(0,255,157,0.15), transparent 50%), radial-gradient(circle at 0% 0%, rgba(0,194,255,0.1), transparent 50%)',
+                        filter: 'blur(40px)',
+                        animation: 'aurora 10s infinite alternate',
+                        zIndex: 0
+                    }} />
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Welcome to your Workspace! 👋</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', marginBottom: '32px' }}>
-                        Your intelligent writing assistant is ready. What would you like to do today?
-                    </p>
-                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                        <button onClick={() => setActiveTab('chat')} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <LuSparkles /> Start New Chat
-                        </button>
-                        <button onClick={() => setActiveTab('doc-qa')} style={{
-                            padding: '12px 24px',
-                            background: 'var(--secondary-bg)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '100px',
-                            color: 'var(--text-primary)',
-                            cursor: 'pointer',
-                            fontWeight: 600
-                        }}>
-                            Upload Document
-                        </button>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Welcome to your Workspace! 👋</h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '600px', marginBottom: '32px' }}>
+                            Your intelligent writing assistant is ready. What would you like to do today?
+                        </p>
+                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                            <button onClick={() => setActiveTab('chat')} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <LuSparkles /> Start New Chat
+                            </button>
+                            <button onClick={() => setActiveTab('doc-qa')} style={{
+                                padding: '12px 24px',
+                                background: 'var(--secondary-bg)',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '100px',
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}>
+                                Upload Document
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </ScrollReveal>
 
             {/* Activity Pulse Widget */}
-            <div className="animate-enter delay-1" style={{ height: '100%' }}>
-                <ActivityPulse />
-            </div>
+            <ScrollReveal direction="up" delay={0.1}>
+                <div className="animate-enter delay-1" style={{ height: '100%' }}>
+                    <ActivityPulse />
+                </div>
+            </ScrollReveal>
         </div>
 
         <div>
-            <h3 className="animate-enter delay-2" style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Quick Access</h3>
+            <ScrollReveal>
+                <h3 className="animate-enter delay-2" style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Quick Access</h3>
+            </ScrollReveal>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                <div className="animate-enter delay-3 hover-3d"><ToolCard
+                <ScrollReveal delay={0.1} direction="up"><div className="animate-enter delay-3 hover-3d"><ToolCard
+                    title="Write"
+                    desc="Open the editor to start your next masterpiece."
+                    icon={LuPenTool}
+                    color="#D946EF"
+                    onClick={() => setActiveTab('editor')}
+                /></div></ScrollReveal>
+                <ScrollReveal delay={0.2} direction="up"><div className="animate-enter delay-3 hover-3d"><ToolCard
                     title="Gen AI Chat"
                     desc="Brainstorm ideas and draft content."
                     icon={LuSparkles}
                     color="#00FF9D"
                     onClick={() => setActiveTab('chat')}
-                /></div>
-                <div className="animate-enter delay-3 hover-3d"><ToolCard
+                /></div></ScrollReveal>
+                <ScrollReveal delay={0.3} direction="up"><div className="animate-enter delay-3 hover-3d"><ToolCard
                     title="Instant Summaries"
                     desc="Get bulleted overviews of long texts."
                     icon={LuZap}
                     color="#FFD700"
                     onClick={() => setActiveTab('summarizer')}
-                /></div>
-                <div className="animate-enter delay-4 hover-3d"><ToolCard
-                    title="Plagiarism Check"
-                    desc="Scan text against billions of sources."
+                /></div></ScrollReveal>
+                <ScrollReveal delay={0.4} direction="up"><div className="animate-enter delay-4 hover-3d"><ToolCard
+                    title="Text Comparison"
+                    desc="Compare two texts for similarities and differences."
                     icon={LuScanSearch}
                     color="#FF5F56"
                     onClick={() => setActiveTab('plagiarism')}
-                /></div>
-                <div className="animate-enter delay-4 hover-3d"><ToolCard
+                /></div></ScrollReveal>
+                <ScrollReveal delay={0.5} direction="up"><div className="animate-enter delay-4 hover-3d"><ToolCard
                     title="Document Q&A"
                     desc="Chat with your PDF files instantly."
                     icon={LuBrainCircuit}
                     color="#00C2FF"
                     onClick={() => setActiveTab('doc-qa')}
-                /></div>
+                /></div></ScrollReveal>
             </div>
         </div>
     </div>
@@ -1222,10 +1292,10 @@ const SummarizerTab = ({ addNotification }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>FORMAT</span>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => setSummaryFormat('bullets')} title="Bullet Points" className={`control-knob ${summaryFormat === 'bullets' ? 'active' : ''}`} style={{ width: '32px', height: '32px' }}>
+                            <button onClick={() => setSummaryFormat('bullets')} title="Bullet Points" className={`control-knob ${summaryFormat === 'bullets' ? 'active' : ''}`} style={{ width: '32px', height: '32px', background: summaryFormat === 'bullets' ? 'var(--accent-color)' : 'transparent', color: summaryFormat === 'bullets' ? '#000' : 'var(--text-secondary)', borderRadius: '8px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <LuLayoutDashboard size={14} />
                             </button>
-                            <button onClick={() => setSummaryFormat('paragraph')} title="Paragraph" className={`control-knob ${summaryFormat === 'paragraph' ? 'active' : ''}`} style={{ width: '32px', height: '32px' }}>
+                            <button onClick={() => setSummaryFormat('paragraph')} title="Paragraph" className={`control-knob ${summaryFormat === 'paragraph' ? 'active' : ''}`} style={{ width: '32px', height: '32px', background: summaryFormat === 'paragraph' ? 'var(--accent-color)' : 'transparent', color: summaryFormat === 'paragraph' ? '#000' : 'var(--text-secondary)', borderRadius: '8px', border: 'none', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <LuFileText size={14} />
                             </button>
                         </div>
@@ -1330,8 +1400,24 @@ const SummarizerTab = ({ addNotification }) => {
                             <LuSparkles /> Distilled Insight
                         </h3>
                         {showOutput && (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button title="Copy" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><LuDownload /></button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{summaryResult.length} chars</span>
+                                <button 
+                                    title="Download" 
+                                    onClick={() => {
+                                        const element = document.createElement("a");
+                                        const file = new Blob([summaryResult], {type: 'text/plain'});
+                                        element.href = URL.createObjectURL(file);
+                                        element.download = "summary.txt";
+                                        document.body.appendChild(element);
+                                        element.click();
+                                        document.body.removeChild(element);
+                                        if (addNotification) addNotification('Summary downloaded!', 'success');
+                                    }}
+                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}
+                                >
+                                    <LuDownload />
+                                </button>
                             </div>
                         )}
                     </div>
@@ -1377,10 +1463,13 @@ const PlagiarismTab = ({ addNotification }) => {
     const [scanProgress, setScanProgress] = useState(0);
     const [analysisData, setAnalysisData] = useState([]);
     const [matchPercentage, setMatchPercentage] = useState(0);
+    const [aiOutput, setAiOutput] = useState('');
 
     // --- 1. Comparison Logic ---
     const compareTexts = (original, suspect) => {
         if (!original || !suspect) return [];
+
+        const originalWordSet = new Set(original.toLowerCase().match(/\b\w+\b/g) || []);
 
         // Simple sentence tokenizer (splitting by period, question mark, exclamation)
         const suspectSentences = suspect.match(/[^.?!]+[.?!]+[\])'"]*|.+/g) || [suspect];
@@ -1390,8 +1479,23 @@ const PlagiarismTab = ({ addNotification }) => {
             const cleanSentence = sentence.trim();
             if (cleanSentence.length < 10) return { id: index, text: sentence, type: 'safe', score: 0 }; // Ignore very short fragments
 
-            // Check if this sentence frame exists in original text
-            const isMatch = original.toLowerCase().includes(cleanSentence.toLowerCase());
+            const sentenceWords = cleanSentence.toLowerCase().match(/\b\w+\b/g) || [];
+            
+            let matchCount = 0;
+            let significantCount = 0;
+            
+            sentenceWords.forEach(word => {
+                if (word.length > 4) { // Focus on meaningful words
+                    significantCount++;
+                    if (originalWordSet.has(word)) matchCount++;
+                }
+            });
+            
+            const exactMatch = original.toLowerCase().includes(cleanSentence.toLowerCase());
+            const wordOverlapRatio = significantCount > 0 ? matchCount / significantCount : 0;
+            
+            // If it's an exact match OR has high significant word overlap
+            const isMatch = exactMatch || wordOverlapRatio > 0.4;
 
             if (isMatch) totalMatches++;
 
@@ -1399,39 +1503,64 @@ const PlagiarismTab = ({ addNotification }) => {
                 id: index,
                 text: sentence,
                 type: isMatch ? 'danger' : 'safe',
-                score: isMatch ? 100 : 0
+                score: isMatch ? Math.round(wordOverlapRatio * 100) : 0
             };
         });
 
         // Calculate %
-        const percentage = Math.round((totalMatches / suspectSentences.length) * 100);
+        const percentage = suspectSentences.length > 0 ? Math.round((totalMatches / suspectSentences.length) * 100) : 0;
         setMatchPercentage(percentage);
         return processedData;
     };
 
-    const handleAnalyze = () => {
+    const handleAnalyze = async () => {
         if (!text1 || !text2) return;
         setStep('scanning');
         setScanProgress(0);
+        setAiOutput('');
 
-        // Simulation of scanning delay
-        const interval = setInterval(() => {
-            setScanProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    // Perform Actual Comparison
-                    const data = compareTexts(text1, text2);
-                    setAnalysisData(data);
-
-                    setTimeout(() => {
-                        setStep('results');
-                        if (addNotification) addNotification('Plagiarism check completed', 'success');
-                    }, 500);
-                    return 100;
-                }
-                return prev + 4; // Faster scan
-            });
+        // Simulation of scanning delay for UI feel
+        const scanInterval = setInterval(() => {
+            setScanProgress(prev => (prev < 90 ? prev + 3 : prev));
         }, 50);
+
+        try {
+            const response = await fetch(`${API_URL}/plagiarism`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text1: text1,
+                    text2: text2,
+                    user: 'dashboard-user'
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.details || err.error || 'Comparison failed');
+            }
+
+            const result = await response.json();
+            
+            // Still perform local comparison for the DNA/Segment view
+            const data = compareTexts(text1, text2);
+            
+            clearInterval(scanInterval);
+            setScanProgress(100);
+            setAnalysisData(data);
+            setAiOutput(result.output);
+
+            setTimeout(() => {
+                setStep('results');
+                if (addNotification) addNotification('Text comparison complete', 'success');
+            }, 500);
+
+        } catch (error) {
+            clearInterval(scanInterval);
+            console.error("Comparison Error:", error);
+            setStep('input');
+            if (addNotification) addNotification(`Error: ${error.message}`, 'error');
+        }
     };
 
     const resetAnalysis = () => {
@@ -1439,6 +1568,7 @@ const PlagiarismTab = ({ addNotification }) => {
         setScanProgress(0);
         setAnalysisData([]);
         setMatchPercentage(0);
+        setAiOutput('');
     };
 
     return (
@@ -1453,8 +1583,8 @@ const PlagiarismTab = ({ addNotification }) => {
                 pointerEvents: step === 'input' ? 'all' : 'none'
             }}>
                 <div style={{ textAlign: 'center', margin: '0 auto', maxWidth: '600px' }}>
-                    <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '8px' }}>Plagiarism Checker</h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>Compare your text against an original source to detect similarities relative to our 3D visualization engine.</p>
+                    <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '8px' }}>Text Comparison</h2>
+                    <p style={{ color: 'var(--text-secondary)' }}>Analyze and compare text segments to identify similarities, ensuring content integrity and accuracy.</p>
                 </div>
 
                 <div className="flex-stack-mobile" style={{ gap: '24px', flex: 1, minHeight: 0 }}>
@@ -1528,7 +1658,7 @@ const PlagiarismTab = ({ addNotification }) => {
             }}>
                 {/* Result Viz */}
                 <div style={{ flex: 1, position: 'relative', overflow: 'hidden', borderRadius: '24px', border: '1px solid var(--glass-border)', background: '#050505' }}>
-                    <PlagiarismResults data={analysisData} matchPercentage={matchPercentage} resetAnalysis={resetAnalysis} />
+                    <PlagiarismResults data={analysisData} matchPercentage={matchPercentage} resetAnalysis={resetAnalysis} aiOutput={aiOutput} />
                 </div>
             </div>
 
@@ -1537,7 +1667,7 @@ const PlagiarismTab = ({ addNotification }) => {
 };
 
 // --- New Concept: DNA Source Map ---
-const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
+const PlagiarismResults = ({ data, matchPercentage, resetAnalysis, aiOutput }) => {
     // Calculate stats
     const totalSentences = data ? data.length : 0;
     const matches = data ? data.filter(d => d.type === 'danger').length : 0;
@@ -1555,9 +1685,9 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
             <div className="plagiarism-stats-header">
                 <Stat label="Total Segments" value={totalSentences} color={text} labelColor={subdued} />
                 <div className="plagiarism-divider" />
-                <Stat label="Matches Found" value={matches} color="#ff4d4d" labelColor={subdued} />
+                <Stat label="Total Matches" value={matches} color="#ff4d4d" labelColor={subdued} />
                 <div className="plagiarism-divider" />
-                <Stat label="Originality Score" value={`${safePercentage}%`} color="#4dffb8" labelColor={subdued} />
+                <Stat label="Similarity Score" value={`${matchPercentage}%`} color="#4dffb8" labelColor={subdued} />
 
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '24px', gridColumn: 'span 2' }}>
                     <button
@@ -1580,7 +1710,7 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
                         <LuRefreshCw size={16} /> New Analysis
                     </button>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={{ fontSize: '0.8rem', color: subdued }}>OVERALL MATCH</span>
+                        <span style={{ fontSize: '0.8rem', color: subdued }}>OVERALL SIMILARITY</span>
                         <span style={{ fontSize: '2rem', fontWeight: 800, color: matchPercentage > 0 ? '#ff4d4d' : '#4dffb8' }}>{matchPercentage}%</span>
                     </div>
                 </div>
@@ -1625,7 +1755,7 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
                             }}>
                                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: subdued }}>
                                     <span>SEGMENT ID: {item.id.toString().padStart(4, '0')}</span>
-                                    {item.type === 'danger' && <span style={{ color: '#ff4d4d', fontWeight: 'bold' }}>⚠️ MATCH DETECTED</span>}
+                                    {item.type === 'danger' && <span style={{ color: '#ff4d4d', fontWeight: 'bold' }}>⚠️ CROSS-TEXT MATCH</span>}
                                 </div>
                                 <p style={{ lineHeight: '1.6', fontSize: '1.05rem', color: item.type === 'danger' ? '#ffcccc' : text, margin: 0 }}>
                                     {item.text}
@@ -1633,13 +1763,47 @@ const PlagiarismResults = ({ data, matchPercentage, resetAnalysis }) => {
                                 {item.type === 'danger' && (
                                     <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.9rem', color: '#ff4d4d', display: 'flex', gap: '10px', alignItems: 'center' }}>
                                         <LuScanSearch />
-                                        <span><strong>Source Match:</strong> Database Record #{Math.floor(Math.random() * 9000) + 1000} (98% Confidence)</span>
+                                        <span><strong>Similarity Match:</strong> Found in Source Text (98% Confidence)</span>
                                     </div>
                                 )}
                             </div>
                         ))}
                         {(!data || data.length === 0) && (
                             <div style={{ textAlign: 'center', opacity: 0.5, padding: '40px' }}>No analysis data available.</div>
+                        )}
+
+                        {/* AI Deep Dive Analysis */}
+                        {aiOutput && (
+                            <div style={{ 
+                                marginTop: '40px', 
+                                padding: '32px', 
+                                background: 'rgba(255,255,255,0.03)', 
+                                borderRadius: '24px', 
+                                border: '1px solid var(--glass-border)',
+                                animation: 'fadeIn 1s ease both 0.5s'
+                            }}>
+                                <h3 style={{ fontSize: '1.25rem', color: 'var(--accent-color)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <LuSparkles /> AI Forensic Deep Dive
+                                </h3>
+                                <div className="ai-markdown-content" style={{ 
+                                    lineHeight: '1.8', 
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '1rem' 
+                                }}>
+                                    {aiOutput.split('\n').map((line, i) => (
+                                        <p key={i} style={{ marginBottom: line.trim() ? '12px' : '20px' }}>
+                                            {line.startsWith('-') || line.startsWith('*') ? (
+                                                <span style={{ display: 'flex', gap: '8px' }}>
+                                                    <span style={{ color: 'var(--accent-color)' }}>•</span>
+                                                    <span>{line.replace(/^[-*]\s*/, '')}</span>
+                                                </span>
+                                            ) : line.startsWith('#') ? (
+                                                <strong style={{ color: '#fff', fontSize: '1.1rem', display: 'block', marginTop: '16px' }}>{line.replace(/^#+\s*/, '')}</strong>
+                                            ) : line}
+                                        </p>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

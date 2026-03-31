@@ -1,9 +1,91 @@
 
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LuPlay, LuArrowRight, LuSparkles, LuExternalLink } from 'react-icons/lu';
+import { LuPlay, LuArrowRight, LuSparkles, LuExternalLink, LuX } from 'react-icons/lu';
 import DigitalWave from './DigitalWave';
+
+// ---------- Video Modal ----------
+// Replace DEMO_VIDEO_URL with your YouTube embed, Vimeo embed, or a direct .mp4 URL
+const DEMO_VIDEO_URL = 'https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=1&rel=0';
+// Example Vimeo: 'https://player.vimeo.com/video/YOUR_VIDEO_ID?autoplay=1'
+// Example local: '/demo.mp4'
+
+const VideoModal = ({ onClose }) => {
+    const isEmbed = DEMO_VIDEO_URL.includes('youtube') || DEMO_VIDEO_URL.includes('vimeo');
+
+    useEffect(() => {
+        const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [onClose]);
+
+    return (
+        <div
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999,
+                background: 'rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '20px',
+                animation: 'fadeInBackdrop 0.3s ease'
+            }}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: '900px',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,255,157,0.15)',
+                    border: '1px solid rgba(0,255,157,0.25)',
+                    animation: 'scaleInModal 0.3s cubic-bezier(0.175,0.885,0.32,1.275)'
+                }}
+            >
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute', top: '16px', right: '16px',
+                        zIndex: 10,
+                        background: 'rgba(0,0,0,0.6)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '50%',
+                        width: '40px', height: '40px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', color: '#fff',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,0,0,0.5)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+                >
+                    <LuX size={20} />
+                </button>
+
+                {/* Video */}
+                {isEmbed ? (
+                    <iframe
+                        src={DEMO_VIDEO_URL}
+                        title="Demo Video"
+                        style={{ width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' }}
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                    />
+                ) : (
+                    <video
+                        src={DEMO_VIDEO_URL}
+                        controls
+                        autoPlay
+                        style={{ width: '100%', aspectRatio: '16/9', display: 'block', background: '#000' }}
+                    />
+                )}
+            </div>
+        </div>
+    );
+};
 
 // --- Components ---
 
@@ -99,8 +181,11 @@ const ChromaticText = ({ text }) => {
 
 const Hero = () => {
     const navigate = useNavigate();
+    const [showVideo, setShowVideo] = useState(false);
 
     return (
+        <>
+        {showVideo && <VideoModal onClose={() => setShowVideo(false)} />}
         <div style={{
             height: '100vh',
             position: 'relative',
@@ -177,8 +262,8 @@ const Hero = () => {
                     lineHeight: '1.6',
                     opacity: 0.9,
                 }}>
-                    Experience the writing tool used by 30 million+ people.
-                    Real-time feedback on tone, clarity, and style.
+                    Your AI-powered writing assistant — built for clarity, tone, and style.
+                    Analyze, rewrite, and perfect your content in seconds.
                 </p>
 
                 <div className="hero-actions" style={{
@@ -212,42 +297,10 @@ const Hero = () => {
                         <LuExternalLink size={18} />
                     </MagneticButton>
 
-                    <MagneticButton
-                        className="btn-secondary"
-                        style={{
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid var(--text-secondary)',
-                            color: 'var(--text-primary)',
-                            padding: '16px 40px',
-                            borderRadius: '100px',
-                            fontSize: '18px',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            cursor: 'pointer',
-                            minWidth: '200px',
-                            backdropFilter: 'blur(5px)'
-                        }}
-                        onClick={() => navigate('/demo')}
-                    >
-                        <div style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            background: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <LuPlay size={10} fill="black" color="black" style={{ marginLeft: '2px' }} />
-                        </div>
-                        Watch Demo
-                    </MagneticButton>
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

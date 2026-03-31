@@ -21,9 +21,16 @@ const About = () => {
         {
             id: '04',
             title: 'Direct Feedback',
-            desc: 'Get immediate visual results for summaries and plagiarism checks.',
+            desc: 'Get immediate visual results for summaries and similarity checks.',
         }
     ];
+
+    const scrollToHero = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
 
     return (
         <section id="about" className="why-choose-section">
@@ -35,11 +42,11 @@ const About = () => {
                 <div className="why-choose-grid">
                     {/* Left Column */}
                     <div className="cards-column left">
-                        <div className="feature-card glass-card">
+                        <div className="feature-card glass-card" onClick={scrollToHero} style={{ cursor: 'pointer' }}>
                             <div className="card-number">01</div>
                             <h3>{cards[0].title}</h3>
                         </div>
-                        <div className="feature-card glass-card">
+                        <div className="feature-card glass-card" onClick={scrollToHero} style={{ cursor: 'pointer' }}>
                             <div className="card-number">03</div>
                             <h3>{cards[2].title}</h3>
                         </div>
@@ -57,11 +64,11 @@ const About = () => {
 
                     {/* Right Column */}
                     <div className="cards-column right">
-                        <div className="feature-card glass-card">
+                        <div className="feature-card glass-card" onClick={scrollToHero} style={{ cursor: 'pointer' }}>
                             <div className="card-number">02</div>
                             <h3>{cards[1].title}</h3>
                         </div>
-                        <div className="feature-card glass-card">
+                        <div className="feature-card glass-card" onClick={scrollToHero} style={{ cursor: 'pointer' }}>
                             <div className="card-number">04</div>
                             <h3>{cards[3].title}</h3>
                         </div>

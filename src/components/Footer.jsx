@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LuPenTool } from 'react-icons/lu';
-import { FaTwitter, FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
+import { FaGithub } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 
 const Footer = () => {
@@ -23,9 +23,9 @@ const Footer = () => {
                     <button
                         className="btn-primary"
                         style={{ padding: '16px 48px', fontSize: '1.2rem' }}
-                        onClick={() => window.location.href = '/signup'}
-                    > {/* Using window.location to ensure robust redirection */}
-                        Get Started Now
+                        onClick={() => navigate('/dashboard')}
+                    > 
+                        Open Editor
                     </button>
                 </div>
 
@@ -97,10 +97,9 @@ const Footer = () => {
                 }}>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>&copy; 2025 Smart Text Analyzer Inc. All rights reserved.</p>
                     <div style={{ display: 'flex', gap: '24px', color: 'var(--text-secondary)' }}>
-                        <FaTwitter size={20} style={{ cursor: 'pointer' }} />
-                        <FaLinkedin size={20} style={{ cursor: 'pointer' }} />
-                        <FaGithub size={20} style={{ cursor: 'pointer' }} />
-                        <FaInstagram size={20} style={{ cursor: 'pointer' }} />
+                        <a href="https://github.com/Karthikeyasharma979/smart" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+                            <FaGithub size={20} style={{ cursor: 'pointer' }} />
+                        </a>
                     </div>
                 </div>
             </div>

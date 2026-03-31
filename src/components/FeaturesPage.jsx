@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { LuSparkles, LuZap, LuScanSearch, LuBrainCircuit, LuLock, LuCheck, LuSearch, LuFileText } from 'react-icons/lu';
+import { LuSparkles, LuZap, LuScanSearch, LuBrainCircuit, LuLock, LuCheck, LuSearch, LuFileText, LuGlobe } from 'react-icons/lu';
 
 const FeaturesPage = () => {
     useEffect(() => {
@@ -12,7 +12,7 @@ const FeaturesPage = () => {
             icon: LuSparkles,
             title: "Generative AI Chat",
             subtitle: "Your Intelligent Brainstorming Partner",
-            description: "Stuck on a blank page? Our Gen AI Chat isn't just a chatbot; it's a creative co-pilot. Whether you need to draft an email, outline a blog post, or rephrase a tricky sentence, just ask. It understands context, tone, and nuance, ensuring your voice remains authentic while enhancing clarity.",
+            description: "Easily identify similarities between two documents. Our Text Comparison tool highlights identical sentences and phrases, providing a precise percentage of matching content between your source and target text.",
             details: [
                 "Context-aware suggestions",
                 "Tone adjustment (Professional, Friendly, Persuasive)",
@@ -32,15 +32,27 @@ const FeaturesPage = () => {
             ]
         },
         {
+            id: 'web-search',
+            icon: LuSearch,
+            title: "Real-time Web Search",
+            subtitle: "Research Without Leaving the Editor",
+            description: "Bridge the gap between your writing and the world's information. Search for facts, trends, and citations directly within your workflow and insert verified links with a single click.",
+            details: [
+                "Live DuckDuckGo integration",
+                "Instant link & citation insertion",
+                "Research-focused result filtering"
+            ]
+        },
+        {
             id: 'plagiarism',
             icon: LuScanSearch,
-            title: "Deep Scan Plagiarism Detection",
-            subtitle: "Originality Guaranteed",
-            description: "Ensure your work is truly yours. Our detection engine scans against a database of over 16 billion web pages and academic papers. It highlights potential matches and provides citation suggestions, making it the standard for academic and professional integrity.",
+            title: "Text Comparison",
+            subtitle: "Compare Two Texts Instantly",
+            description: "Easily identify similarities and differences between two documents. Our Text Comparison tool highlights identical segments and provides a detailed similarity score, ensuring you can quickly cross-check your content for consistency and originality.",
             details: [
-                "Billions of sources scanned",
-                "Detailed match percentage",
-                "Integrated citation generator"
+                "Highlight identical segments",
+                "Similarity percentage score",
+                "Instant cross-check"
             ]
         },
         {
@@ -53,18 +65,6 @@ const FeaturesPage = () => {
                 "Chat with PDF/Word/Docs",
                 "Citation-backed answers",
                 "Multi-document analysis"
-            ]
-        },
-        {
-            id: 'security',
-            icon: LuLock,
-            title: "Enterprise-Grade Security",
-            subtitle: "Your Data, Protected",
-            description: "We take security seriously. Your data is encrypted both in transit and at rest using industry-standard protocols. We are SOC2 and ISO compliant, and we never use your private data to train our public models without explicit permission.",
-            details: [
-                "SOC2 & ISO Compliant",
-                "End-to-end encryption",
-                "Private cloud deployment options"
             ]
         }
     ];
@@ -244,6 +244,33 @@ const FeaturesPage = () => {
                                         ))}
                                     </div>
                                 </div>
+                            ) : feature.id === 'web-search' ? (
+                                <div className="glass-panel" style={{
+                                    height: '400px', width: '100%', borderRadius: '32px',
+                                    border: '1px solid var(--glass-border)',
+                                    background: 'linear-gradient(135deg, rgba(0, 255, 157, 0.05), rgba(0,0,0,0))',
+                                    position: 'relative', overflow: 'hidden',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <div style={{
+                                        width: '280px', height: 'auto', background: 'var(--bg-primary)',
+                                        borderRadius: '20px', border: '1px solid var(--accent-color)',
+                                        padding: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                                        display: 'flex', flexDirection: 'column', gap: '12px'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '10px' }}>
+                                            <LuSearch size={16} color="var(--accent-color)" />
+                                            <div style={{ height: '8px', width: '60%', background: 'var(--text-primary)', opacity: 0.5, borderRadius: '4px' }} />
+                                        </div>
+                                        {[...Array(3)].map((_, i) => (
+                                            <div key={i} style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ height: '10px', width: '80%', background: '#00C2FF', borderRadius: '4px', marginBottom: '8px' }} />
+                                                <div style={{ height: '6px', width: '100%', background: 'var(--text-secondary)', opacity: 0.3, borderRadius: '4px' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <LuGlobe size={120} color="rgba(0, 255, 157, 0.05)" style={{ position: 'absolute', top: '-20px', right: '-20px' }} />
+                                </div>
                             ) : feature.id === 'plagiarism' ? (
                                 <div className="glass-panel" style={{
                                     height: '400px', width: '100%', borderRadius: '32px',
@@ -276,7 +303,7 @@ const FeaturesPage = () => {
                                         display: 'flex', alignItems: 'center', gap: '8px',
                                         boxShadow: '0 10px 20px rgba(255, 95, 86, 0.3)'
                                     }}>
-                                        <LuSearch size={16} /> Match Found: 12%
+                                        <LuSearch size={16} /> Similarity: 12%
                                     </div>
                                     <style>{`@keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 50% { top: 90%; opacity: 1; } }`}</style>
                                 </div>
@@ -311,38 +338,7 @@ const FeaturesPage = () => {
                                         Risk factors include...
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="glass-panel" style={{
-                                    height: '400px', width: '100%', borderRadius: '32px',
-                                    border: '1px solid var(--glass-border)',
-                                    background: 'linear-gradient(135deg, rgba(200, 200, 255, 0.05), rgba(0,0,0,0))',
-                                    position: 'relative', overflow: 'hidden',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
-                                    <div style={{
-                                        width: '180px', height: '220px',
-                                        background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
-                                        borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        position: 'relative'
-                                    }}>
-                                        <LuLock size={64} color="var(--text-primary)" />
-
-                                        {/* Floating Shields */}
-                                        <div style={{
-                                            position: 'absolute', top: -20, right: -20,
-                                            padding: '8px 16px', background: '#00ef8b', color: '#000',
-                                            borderRadius: '100px', fontSize: '0.8rem', fontWeight: 800,
-                                            boxShadow: '0 10px 20px rgba(0, 239, 139, 0.3)'
-                                        }}>SOC2</div>
-                                        <div style={{
-                                            position: 'absolute', bottom: -20, left: -20,
-                                            padding: '8px 16px', background: 'var(--text-primary)', color: 'var(--bg-primary)',
-                                            borderRadius: '100px', fontSize: '0.8rem', fontWeight: 800,
-                                            boxShadow: '0 10px 20px rgba(0,0,0,0.3)'
-                                        }}>AES-256</div>
-                                    </div>
-                                </div>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 ))}

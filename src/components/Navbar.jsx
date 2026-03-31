@@ -5,7 +5,7 @@ import logo from '../assets/logo.png';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -13,8 +13,8 @@ const Navbar = () => {
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
-            if (window.innerWidth >= 768) setMenuOpen(false);
+            setIsMobile(window.innerWidth <= 768);
+            if (window.innerWidth > 768) setMenuOpen(false);
         };
 
         window.addEventListener('scroll', handleScroll);

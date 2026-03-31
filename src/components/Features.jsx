@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LuSparkles, LuZap, LuScanSearch, LuRocket, LuTrendingUp, LuPlane, LuPuzzle, LuUser } from 'react-icons/lu';
+import { LuSparkles, LuZap, LuScanSearch, LuRocket, LuTrendingUp, LuSearch } from 'react-icons/lu';
 
 const Features = () => {
     const navigate = useNavigate();
@@ -35,8 +35,8 @@ const Features = () => {
             title: "Instant",
             subtitle: "Summaries.",
             subtitleColor: "#60a5fa",
-            desc: "Don't drown in data. Turn hours of reading into minutes of understanding. Upload dense PDFs or paste long text and get actionable insights immediately.",
-            featuresList: ["Key point extraction", "Action item detection", "PDF support"],
+            desc: "Don't drown in data. Turn hours of reading into minutes of understanding. Paste long text and get actionable insights immediately.",
+            featuresList: ["Key point extraction", "Action item detection"],
             icon: <LuZap />,
             mockup: {
                 mainTitle: "Time Saved",
@@ -56,18 +56,18 @@ const Features = () => {
         {
             id: 2,
             title: "Deep",
-            subtitle: "Scan.",
+            subtitle: "Text Compare.",
             subtitleColor: "#f472b6",
-            desc: "Guaranteed originality. Our deep scan checks your text against 16 billion+ web pages and academic sources to ensure 100% authentic work.",
-            featuresList: ["16B+ source database", "Academic paper matching", "Detailed reports"],
+            desc: "Instantly check if two texts are same or different. Our comparison engine highlights matching segments and provides a detailed similarity score.",
+            featuresList: ["Side-by-side comparison", "Identical phrase highlighting", "Instant similarity score"],
             icon: <LuScanSearch />,
             mockup: {
                 mainTitle: "Originality",
                 mainValue: "100%",
                 mainLabel: "Unique Content",
-                sideName: "Plagiarism",
-                sideAmount: "0%",
-                sideLabel: "Matches Found",
+                sideName: "Comparison",
+                sideAmount: "95%",
+                sideLabel: "Similarity Score",
                 transactions: [
                     { name: 'Thesis Final', type: 'Verified', color: '#fff1f2', icon: '✅' },
                     { name: 'Client Article', type: 'Safe', color: '#f0fdf4', icon: '🛡️' },
@@ -97,6 +97,29 @@ const Features = () => {
                     { name: 'Grammar', type: 'Perfect', color: '#fffbeb', icon: '✨' },
                 ],
                 graphColor: "#c084fc"
+            }
+        },
+        {
+            id: 4,
+            title: "Live",
+            subtitle: "Web Search.",
+            subtitleColor: "#00FF9D",
+            desc: "Connect your writing to the world. Search the web directly from your editor and insert verified links and citations instantly.",
+            featuresList: ["DuckDuckGo integration", "Instant link insertion", "Deep-web research"],
+            icon: <LuSearch />,
+            mockup: {
+                mainTitle: "Search Activity",
+                mainValue: "450+",
+                mainLabel: "Queries processed",
+                sideName: "Connectivity",
+                sideAmount: "Real-time",
+                sideLabel: "Live Data",
+                transactions: [
+                    { name: 'Latest Trends', type: 'Fetched', color: '#e0f2fe', icon: '🌐' },
+                    { name: 'Quick Fact-check', type: 'Verified', color: '#f0fdf4', icon: '✅' },
+                    { name: 'Citation Hunt', type: 'Stored', color: '#fdf2f8', icon: '🔗' },
+                ],
+                graphColor: "#00FF9D"
             }
         }
     ];
@@ -197,7 +220,8 @@ const Features = () => {
                                         {activeFeature === 0 ? " The AI suggestions are becoming more tailored to your style." :
                                             activeFeature === 1 ? " You're summarizing articles 2x faster than average." :
                                                 activeFeature === 2 ? " Your content is 100% original and citation-ready." :
-                                                    " Vocabulary richness allows you to target more complex demographics."}
+                                                    activeFeature === 3 ? " Vocabulary richness allows you to target more complex demographics." :
+                                                        " Real-time search ensures your data is always up-to-date and verified."}
                                     </p>
                                 </div>
                             </div>
