@@ -35,7 +35,8 @@ import ShortcutCustomizer from './ShortcutCustomizer';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import ScrollReveal from './ScrollReveal';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const baseApiUrl = import.meta.env.VITE_API_URL || '';
+const API_URL = baseApiUrl.endsWith('/') ? baseApiUrl.slice(0, -1) : baseApiUrl;
 
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -50,6 +51,8 @@ const Dashboard = () => {
     const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/notionists/svg?seed=Guest');
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showShortcutCustomizer, setShowShortcutCustomizer] = useState(false);
+    const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+    const [globalLoadingMessage, setGlobalLoadingMessage] = useState('Analyzing Document...');
     const containerRef = React.useRef(null);
     const { scrollYProgress } = useScroll({ container: containerRef });
     const scaleX = useSpring(scrollYProgress, {
@@ -110,7 +113,7 @@ const Dashboard = () => {
             case 'chat': return <ChatTab addNotification={addNotification} />;
             case 'summarizer': return <SummarizerTab addNotification={addNotification} />;
             case 'plagiarism': return <PlagiarismTab addNotification={addNotification} />;
-            case 'doc-qa': return <DocQATab addNotification={addNotification} />;
+            case 'doc-qa': return <DocQATab addNotification={addNotification} setGlobalLoading={setIsGlobalLoading} setGlobalMessage={setGlobalLoadingMessage} />;
             default: return <OverviewTab setActiveTab={setActiveTab} />;
         }
     };
@@ -169,10 +172,36 @@ const Dashboard = () => {
                 </nav>
 
                 <div style={{ padding: '24px 16px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <SidebarItem icon={LuSettings} label="Shortcuts" onClick={() => setShowShortcutCustomizer(true)} />
-                    <SidebarItem icon={LuLogOut} label="Exit Dashboard" onClick={handleLogout} />
+                    <SidebarItem icon={LuSettings} label="Shortcuts" onClick={() => !isGlobalLoading && setShowShortcutCustomizer(true)} />
+                    <SidebarItem icon={LuLogOut} label="Exit Dashboard" onClick={() => !isGlobalLoading && handleLogout()} />
                 </div>
             </aside>
+
+            {/* Global Interaction Lock Overlay */}
+            {isGlobalLoading && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999,
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '24px',
+                    animation: 'fadeIn 0.3s ease-out'
+                }}>
+                    <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+                        <div style={{ position: 'absolute', inset: 0, border: '4px solid rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                        <div style={{ position: 'absolute', inset: 0, border: '4px solid var(--accent-color)', borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px', color: '#fff' }}>{globalLoadingMessage}</h2>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>Please wait, we are securing your workspace...</p>
+                    </div>
+                </div>
+            )}
 
             {/* Mobile Sidebar Overlay */}
             {isMobile && isSidebarOpen && (
@@ -431,43 +460,47 @@ const Dashboard = () => {
 
 // --- Sub Components ---
 
-const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
-    <button
-        onClick={onClick}
-        style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 16px',
-            width: '100%',
-            borderRadius: '12px',
-            background: active ? 'var(--accent-color)' : 'transparent',
-            color: active ? '#000' : 'var(--text-primary)',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            fontWeight: active ? 600 : 500,
-            fontSize: '1rem',
-            textAlign: 'left',
-            opacity: active ? 1 : 0.7
-        }}
-        onMouseEnter={e => {
-            if (!active) {
-                e.currentTarget.style.background = 'var(--button-hover)';
-                e.currentTarget.style.opacity = '1';
-            }
-        }}
-        onMouseLeave={e => {
-            if (!active) {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.opacity = '0.7';
-            }
-        }}
-    >
-        <Icon size={20} />
-        {label}
-    </button>
-);
+
+const SidebarItem = ({ icon: Icon, label, active, onClick }) => {
+    // Access global loading state if needed, but easier to just pass disabled prop or check in Dashboard
+    return (
+        <button
+            onClick={onClick}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                width: '100%',
+                borderRadius: '12px',
+                background: active ? 'var(--accent-color)' : 'transparent',
+                color: active ? '#000' : 'var(--text-primary)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontWeight: active ? 600 : 500,
+                fontSize: '1rem',
+                textAlign: 'left',
+                opacity: active ? 1 : 0.7
+            }}
+            onMouseEnter={e => {
+                if (!active) {
+                    e.currentTarget.style.background = 'var(--button-hover)';
+                    e.currentTarget.style.opacity = '1';
+                }
+            }}
+            onMouseLeave={e => {
+                if (!active) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.opacity = '0.7';
+                }
+            }}
+        >
+            <Icon size={20} />
+            {label}
+        </button>
+    );
+};
 
 const OverviewTab = ({ setActiveTab }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -791,7 +824,7 @@ const ChatTab = ({ addNotification }) => {
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent'
                         }}>
-                            Good evening, John
+                            Good evening, Guest
                         </h2>
                         <h3 style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
                             How can I help you today?
@@ -1819,15 +1852,82 @@ const Stat = ({ label, value, color = '#fff', labelColor = '#888' }) => (
     </div>
 );
 
-const DocQATab = ({ addNotification }) => {
-    const [file, setFile] = useState(null);
+const idbStore = {
+    init: () => new Promise((resolve, reject) => {
+        const req = indexedDB.open('SmartTextAnalyzerDB', 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('pdfStore')) db.createObjectStore('pdfStore');
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = () => reject(req.error);
+    }),
+    save: async (fileData) => {
+        try {
+            const db = await idbStore.init();
+            const tx = db.transaction('pdfStore', 'readwrite');
+            tx.objectStore('pdfStore').put(fileData, 'current-pdf');
+            return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+        } catch(e) { console.warn(e); }
+    },
+    load: async () => {
+        try {
+            const db = await idbStore.init();
+            const tx = db.transaction('pdfStore', 'readonly');
+            const req = tx.objectStore('pdfStore').get('current-pdf');
+            return new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = rej; });
+        } catch(e) { return null; }
+    },
+    clear: async () => {
+        try {
+            const db = await idbStore.init();
+            const tx = db.transaction('pdfStore', 'readwrite');
+            tx.objectStore('pdfStore').delete('current-pdf');
+            return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+        } catch(e) { console.warn(e); }
+    }
+};
+
+const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
+    const [file, setFile] = useState(() => {
+        const savedName = localStorage.getItem('docqa-filename');
+        return savedName ? { name: savedName, size: 0, type: 'application/pdf' } : null;
+    });
     const [fileUrl, setFileUrl] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(() => {
+        const savedName = localStorage.getItem('docqa-filename');
+        if (savedName) {
+            return [{
+                id: 1,
+                role: 'ai',
+                text: `Analysis complete. I've successfully recovered "${savedName}" from your local cache and I'm ready to answer your questions!`
+            }];
+        }
+        return [];
+    });
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [extractedText, setExtractedText] = useState(() => {
+        return localStorage.getItem('docqa-text') || '';
+    });
     const fileInputRef = React.useRef(null);
     const messagesEndRef = React.useRef(null);
+
+    // Initialize IDB file on mount if localStorage cache says it should exist
+    useEffect(() => {
+        const checkIDB = async () => {
+            const cachedName = localStorage.getItem('docqa-filename');
+            if (cachedName) {
+                const cachedFile = await idbStore.load();
+                if (cachedFile && cachedFile.type === 'application/pdf') {
+                    setFileUrl(URL.createObjectURL(cachedFile));
+                    setFile(cachedFile);
+                }
+            }
+        };
+        checkIDB();
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -1844,6 +1944,8 @@ const DocQATab = ({ addNotification }) => {
         if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
             setIsProcessing(true);
+            setGlobalLoading(true);
+            setGlobalMessage(`Analyzing ${selectedFile.name}...`);
 
             const formData = new FormData();
             formData.append('file', selectedFile);
@@ -1859,14 +1961,28 @@ const DocQATab = ({ addNotification }) => {
                     throw new Error(error.error || 'Upload failed');
                 }
 
+                const data = await response.json();
+                const text = data.extracted_text || "";
+                
+                try {
+                    localStorage.setItem('docqa-text', text);
+                    localStorage.setItem('docqa-filename', selectedFile.name);
+                } catch (e) {
+                    console.warn("localStorage failed (maybe full?)", e);
+                }
+                
+                setExtractedText(text);
+
                 setFile(selectedFile);
                 if (selectedFile.type === 'application/pdf') {
                     setFileUrl(URL.createObjectURL(selectedFile));
+                    idbStore.save(selectedFile);
                 } else {
                     setFileUrl(null);
                 }
 
                 setIsProcessing(false);
+                setGlobalLoading(false);
                 setMessages([{
                     id: 1,
                     role: 'ai',
@@ -1877,6 +1993,7 @@ const DocQATab = ({ addNotification }) => {
             } catch (err) {
                 console.error("Upload Error:", err);
                 setIsProcessing(false);
+                setGlobalLoading(false);
                 setMessages([{
                     id: 1,
                     role: 'ai',
@@ -1899,7 +2016,7 @@ const DocQATab = ({ addNotification }) => {
                 const response = await fetch(`${API_URL}/query`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: userText })
+                    body: JSON.stringify({ query: userText, context: extractedText })
                 });
 
                 if (!response.ok) {
@@ -1990,7 +2107,7 @@ const DocQATab = ({ addNotification }) => {
                             }}>
                                 <span style={{ fontSize: '0.9rem', fontWeight: 600, maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.name}</span>
                                 <button
-                                    onClick={() => { setFile(null); setFileUrl(null); setMessages([]); }}
+                                    onClick={() => { setFile(null); setFileUrl(null); setMessages([]); setExtractedText(''); localStorage.removeItem('docqa-text'); localStorage.removeItem('docqa-filename'); idbStore.clear(); }}
                                     style={{
                                         background: 'var(--bg-primary)', border: 'none', borderRadius: '50%',
                                         width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2011,7 +2128,7 @@ const DocQATab = ({ addNotification }) => {
                             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>{(file.size / 1024 / 1024).toFixed(2)} MB • Processed & Ready</p>
                             <button
                                 className="btn-primary"
-                                onClick={() => { setFile(null); setFileUrl(null); setMessages([]); }}
+                                onClick={() => { setFile(null); setFileUrl(null); setMessages([]); setExtractedText(''); localStorage.removeItem('docqa-text'); localStorage.removeItem('docqa-filename'); idbStore.clear(); }}
                                 style={{ background: 'var(--secondary-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                             >
                                 Change Document

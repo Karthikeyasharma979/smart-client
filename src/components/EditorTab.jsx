@@ -38,7 +38,8 @@ import {
 import html2pdf from 'html2pdf.js';
 import { useShortcuts } from '../contexts/ShortcutContext';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const baseApiUrl = import.meta.env.VITE_API_URL || '';
+const API_URL = baseApiUrl.endsWith('/') ? baseApiUrl.slice(0, -1) : baseApiUrl;
 
 const EditorTab = ({ addNotification }) => {
     const [title, setTitle] = useState('');
@@ -63,7 +64,9 @@ const EditorTab = ({ addNotification }) => {
         y: 0,
         query: '',
         loading: false,
-        savedRange: null
+        savedRange: null,
+        isDragging: false,
+        dragStart: { x: 0, y: 0 }
     });
 
     const getShortcutLabel = (id) => {
@@ -76,6 +79,34 @@ const EditorTab = ({ addNotification }) => {
         parts.push(config.key.toUpperCase());
         return parts.join('+');
     };
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (inlinePrompt.isDragging) {
+                setInlinePrompt(prev => ({
+                    ...prev,
+                    x: e.clientX - prev.dragStart.x,
+                    y: e.clientY - prev.dragStart.y
+                }));
+            }
+        };
+
+        const handleMouseUp = () => {
+            if (inlinePrompt.isDragging) {
+                setInlinePrompt(prev => ({ ...prev, isDragging: false }));
+            }
+        };
+
+        if (inlinePrompt.isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [inlinePrompt.isDragging]);
 
     useEffect(() => {
         const unregisterAnalysis = registerAction('run-analysis', () => {
@@ -538,11 +569,13 @@ const EditorTab = ({ addNotification }) => {
                                     const rect = range.getBoundingClientRect();
                                     setInlinePrompt({
                                         isOpen: true,
-                                        x: rect.right + 10,
-                                        y: Math.max(0, rect.top - 20),
+                                        x: rect.right + 5,
+                                        y: rect.top,
                                         query: '',
                                         loading: false,
-                                        savedRange: range.cloneRange()
+                                        savedRange: range.cloneRange(),
+                                        isDragging: false,
+                                        dragStart: { x: 0, y: 0 }
                                     });
                                 }
                             }
@@ -623,9 +656,28 @@ const EditorTab = ({ addNotification }) => {
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 600 }}>
+                        <div 
+                            onMouseDown={(e) => {
+                                setInlinePrompt(prev => ({
+                                    ...prev,
+                                    isDragging: true,
+                                    dragStart: { x: e.clientX - prev.x, y: e.clientY - prev.y }
+                                }));
+                            }}
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px', 
+                                color: 'var(--accent-color)', 
+                                fontSize: '0.85rem', 
+                                fontWeight: 600,
+                                cursor: 'move',
+                                userSelect: 'none',
+                                paddingBottom: '4px'
+                            }}
+                        >
                             {inlinePrompt.loading ? <LuRefreshCw size={16} className="spin-slow" /> : <LuSparkles size={16} />}
-                            <span>{inlinePrompt.loading ? 'Generating...' : 'AI Command'}</span>
+                            <span>{inlinePrompt.loading ? 'Generating...' : 'AI Command (Drag to move)'}</span>
                         </div>
                         <textarea 
                             autoFocus
