@@ -1921,7 +1921,7 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
             if (cachedName) {
                 const cachedFile = await idbStore.load();
                 if (cachedFile && cachedFile.type === 'application/pdf') {
-                    setFileUrl(URL.createObjectURL(cachedFile));
+                    setFileUrl(URL.createObjectURL(cachedFile) + '#view=Fit');
                     setFile(cachedFile);
                 }
             }
@@ -1975,7 +1975,7 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
 
                 setFile(selectedFile);
                 if (selectedFile.type === 'application/pdf') {
-                    setFileUrl(URL.createObjectURL(selectedFile));
+                    setFileUrl(URL.createObjectURL(selectedFile) + '#view=Fit');
                     idbStore.save(selectedFile);
                 } else {
                     setFileUrl(null);
