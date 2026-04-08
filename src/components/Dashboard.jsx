@@ -34,6 +34,7 @@ import ActivityPulse from './ActivityPulse';
 import ShortcutCustomizer from './ShortcutCustomizer';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import ScrollReveal from './ScrollReveal';
+import { useShortcuts } from '../contexts/ShortcutContext';
 
 const baseApiUrl = import.meta.env.VITE_API_URL || '';
 const API_URL = baseApiUrl.endsWith('/') ? baseApiUrl.slice(0, -1) : baseApiUrl;
@@ -78,6 +79,17 @@ const Dashboard = () => {
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const { registerAction } = useShortcuts();
+
+    useEffect(() => {
+        const unregisterShortcutsPanel = registerAction('show-shortcuts', () => {
+            if (!isGlobalLoading) {
+                setShowShortcutCustomizer(prev => !prev);
+            }
+        });
+        return () => unregisterShortcutsPanel();
+    }, [registerAction, isGlobalLoading]);
 
 
 
@@ -677,12 +689,12 @@ const ChatTab = ({ addNotification }) => {
     const [input, setInput] = useState('');
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [activeModel, setActiveModel] = useState('Gemini 3 Flash Preview');
+    const [activeModel, setActiveModel] = useState('Gemini 1.5 Flash');
 
     const MODEL_MAP = {
-        'Gemini 3 Flash Preview': 'gemini-2.5-flash',
-        'Gemini 1.5 Flash': 'gemini-2.5-flash',
-        'Gemini 2.0 Flash': 'gemini-2.5-flash'
+        'Gemini 1.5 Flash': 'gemini-1.5-flash',
+        'Gemini 1.5 Pro': 'gemini-1.5-pro',
+        'Gemini 2.0 Flash (Preview)': 'gemini-2.0-flash-exp'
     };
 
     const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
@@ -739,13 +751,17 @@ const ChatTab = ({ addNotification }) => {
                         text: textToSend,
                         user: 'dashboard-user',
                         tone: personas[activePersona]?.name?.toLowerCase() || 'friendly',
-                        model: selectedModelId
+                        model: selectedModelId,
+                        source: 'ai_chat'
                     })
                 });
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    const errorMessage = errData.details || errData.error || response.statusText || 'Network error';
+                    const errorMessage =
+                        response.status >= 500
+                            ? 'AI service is temporarily unavailable. Please try again in a moment.'
+                            : (errData.error || response.statusText || 'Network error');
                     throw new Error(errorMessage);
                 }
 
@@ -795,6 +811,28 @@ const ChatTab = ({ addNotification }) => {
             background: 'var(--glass-bg)',
             transition: 'all 0.3s ease'
         }}>
+            <style>{`
+                @keyframes chatTypingBounce {
+                    0%, 80%, 100% {
+                        transform: translateY(0) scale(0.9);
+                        opacity: 0.35;
+                    }
+                    40% {
+                        transform: translateY(-5px) scale(1);
+                        opacity: 1;
+                    }
+                }
+                @keyframes chatTypingBubbleIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(6px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
 
             {!hasMessages ? (
                 // --- HERO VIEW ---
@@ -1116,10 +1154,10 @@ const ChatTab = ({ addNotification }) => {
                         ))}
 
                         {isTyping && (
-                            <div style={{ alignSelf: 'flex-start', background: 'var(--chat-bubble-bg)', padding: '12px 20px', borderRadius: '24px', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'bounce 1s infinite 0s' }} />
-                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }} />
-                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'bounce 1s infinite 0.4s' }} />
+                            <div style={{ alignSelf: 'flex-start', background: 'var(--chat-bubble-bg)', padding: '12px 20px', borderRadius: '24px', display: 'flex', gap: '6px', alignItems: 'center', animation: 'chatTypingBubbleIn 180ms ease-out' }}>
+                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'chatTypingBounce 900ms infinite ease-in-out', animationDelay: '0ms' }} />
+                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'chatTypingBounce 900ms infinite ease-in-out', animationDelay: '140ms' }} />
+                                <div style={{ width: '8px', height: '8px', background: 'var(--text-secondary)', borderRadius: '50%', animation: 'chatTypingBounce 900ms infinite ease-in-out', animationDelay: '280ms' }} />
                             </div>
                         )}
                         <div ref={messagesEndRef} />
@@ -1228,7 +1266,11 @@ const SummarizerTab = ({ addNotification }) => {
     const [inputText, setInputText] = useState('');
 
     // Pre-filled text for demo
-    const defaultText = "Artificial Intelligence (AI) simulates human intelligence processes by machines, especially computer systems. These processes include learning (the acquisition of information and rules for using the information), reasoning (using rules to reach approximate or definite conclusions), and self-correction. Particular applications of AI include expert systems, speech recognition, and machine vision.";
+    const defaultText = `Artificial Intelligence (AI) has become a foundational technology for modern products and services because it can process large volumes of information faster than manual workflows while still producing useful predictions and language outputs. Organizations apply AI to automate repetitive operations, support customer interactions, identify anomalies in business data, and accelerate document-heavy work such as report preparation, compliance review, and internal knowledge retrieval. As adoption grows, teams are moving from isolated experiments to integrated AI workflows that connect data pipelines, application logic, and human decision points in one continuous system.
+
+The strongest AI implementations combine technical capability with domain context, not just model accuracy in isolation. High-performing teams define clear use cases, build measurable quality criteria, and monitor output behavior over time so systems remain stable as input patterns shift. They also design for explainability by capturing why specific outputs are generated, which helps stakeholders trust recommendations in practical settings like healthcare triage, financial risk analysis, and educational assessment support. When AI outputs are reviewed in context and paired with expert feedback loops, the system improves faster and produces more reliable real-world outcomes.
+
+Long-term success with AI depends on responsible governance as much as engineering speed. Privacy protection, bias mitigation, security controls, and human oversight should be built into deployment plans from the start rather than added after incidents occur. Teams that treat AI as a collaborative assistant instead of an autonomous authority generally achieve better results because people remain accountable for final decisions while using AI to increase speed and consistency. This balanced model enables organizations to scale innovation, reduce operational friction, and deliver higher-quality experiences without sacrificing safety, transparency, or user trust.`;
 
     const [summaryResult, setSummaryResult] = useState('');
 
@@ -1654,8 +1696,8 @@ const PlagiarismTab = ({ addNotification }) => {
                     </button>
                     <button
                         onClick={() => {
-                            setText1("Artificial Intelligence is the intelligence of machines or software, as opposed to the intelligence of living beings, primarily of humans. It is a field of study in computer science that develops and studies intelligent machines. Such machines may be called AIs.");
-                            setText2("Artificial Intelligence is the intelligence of machines or software. It is unlike the natural intelligence displayed by humans and animals. It is a field of study in computer science that develops and studies intelligent machines.");
+                            setText1("Artificial intelligence has shifted from a research topic to an operational layer in modern organizations. Teams use AI to automate repetitive support workflows, classify incoming requests, summarize long reports, and detect unusual patterns in large datasets. In content operations, AI helps transform rough drafts into clearer writing by improving structure, reducing redundancy, and suggesting tone adjustments for specific audiences.\n\nEffective adoption depends on clear use cases, measurable quality standards, and human review checkpoints. When teams define success metrics such as response relevance, factual consistency, and turnaround time, they can improve model performance over time without sacrificing reliability. Strong implementation also requires data governance, privacy safeguards, and transparent decision logs so stakeholders can understand why outputs were generated.\n\nOrganizations that treat AI as a collaborative assistant typically gain the most value. Human experts remain responsible for final decisions while AI accelerates first-pass analysis and drafting. This balance improves productivity, preserves accountability, and builds trust with users who need both speed and accuracy.");
+                            setText2("Artificial intelligence has moved beyond research labs and now powers many day-to-day business workflows. Companies apply AI to automate routine customer support, categorize tickets, summarize long documents, and flag anomalies in large streams of data. For writing teams, AI can refine rough drafts by improving clarity, removing repetition, and adjusting tone for different readers.\n\nSuccessful implementation requires more than model accuracy. Teams need clear goals, quality metrics, and review loops to track relevance, consistency, and delivery speed. Reliable deployments also include privacy controls, governance policies, and traceable output records so decisions can be audited.\n\nThe strongest results usually come from human-AI collaboration. Experts keep decision ownership while AI handles first-pass analysis and content generation. This approach increases productivity and consistency while maintaining trust and accountability.");
                         }}
                         style={{ marginTop: '16px', background: 'transparent', border: 'none', textDecoration: 'underline', color: 'var(--text-secondary)', cursor: 'pointer' }}
                     >
@@ -2057,6 +2099,18 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
                 }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes popIn {
+                    0% { transform: scale(0.92) translateY(6px); opacity: 0; }
+                    100% { transform: scale(1) translateY(0); opacity: 1; }
+                }
+                @keyframes bounce {
+                    0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+                    40% { transform: translateY(-6px); opacity: 1; }
+                }
+                @keyframes softPulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.18); }
+                    50% { box-shadow: 0 0 0 10px rgba(0, 255, 157, 0); }
+                }
             `}</style>
 
             {/* Document Viewer */}
@@ -2077,7 +2131,7 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.txt"
+                    accept=".pdf,.docx,.txt"
                     style={{ display: 'none' }}
                 />
 
@@ -2141,7 +2195,8 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
                             style={{
                                 padding: '40px', borderRadius: '50%', background: 'var(--glass-bg)',
                                 border: '1px dashed var(--glass-border)', marginBottom: '24px',
-                                cursor: 'pointer', transition: 'all 0.3s'
+                                cursor: 'pointer', transition: 'all 0.3s',
+                                animation: 'softPulse 2.2s ease-in-out infinite'
                             }}
                             onClick={() => fileInputRef.current.click()}
                             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-color)'}
@@ -2165,7 +2220,7 @@ const DocQATab = ({ addNotification, setGlobalLoading, setGlobalMessage }) => {
             <div className="glass-panel doc-qa-panel" style={{ borderRadius: '24px', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--glass-border)', background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LuBrainCircuit color="var(--accent-color)" /> Document Chat
+                        <LuBrainCircuit color="var(--accent-color)" style={{ animation: 'softPulse 2.2s ease-in-out infinite' }} /> Document Chat
                     </h3>
                 </div>
 

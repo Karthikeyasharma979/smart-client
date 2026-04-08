@@ -6,6 +6,10 @@ const DEFAULT_SHORTCUTS = {
     'run-analysis': { key: 'r', ctrl: true, alt: false, shift: false, label: 'Run Analysis' },
     'toggle-zen': { key: 'z', ctrl: true, alt: true, shift: false, label: 'Toggle Zen Mode' },
     'download-pdf': { key: 'd', ctrl: true, alt: false, shift: true, label: 'Download PDF' },
+    'clear-editor': { key: 'x', ctrl: true, alt: true, shift: false, label: 'Clear Editor Text' },
+    'copy-text': { key: 'c', ctrl: true, alt: false, shift: true, label: 'Copy Editor Text' },
+    'show-shortcuts': { key: '/', ctrl: true, alt: false, shift: false, label: 'Show Shortcuts' },
+    'trigger-ai': { key: 'j', ctrl: true, alt: false, shift: false, label: 'Open AI Prompt' },
 };
 
 export const ShortcutProvider = ({ children }) => {

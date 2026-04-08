@@ -41,12 +41,25 @@ import { useShortcuts } from '../contexts/ShortcutContext';
 const baseApiUrl = import.meta.env.VITE_API_URL || '';
 const API_URL = baseApiUrl.endsWith('/') ? baseApiUrl.slice(0, -1) : baseApiUrl;
 
+const DEMO_EDITOR_TEXT = `Smart Text Analyzer is an AI-powered writing assistant designed to improve clarity, tone, and structure in real time. It helps users turn rough drafts into polished writing without breaking their flow.
+
+The platform identifies grammar issues, awkward phrasing, and readability problems as you write. Instead of only flagging errors, it also suggests practical edits that make each sentence clearer and more natural.
+
+Tone controls let users quickly adapt the same message for different audiences. A draft can be transformed into professional communication for clients, a friendly response for community posts, or an academic explanation for research work.
+
+The summarization tool condenses long passages into concise takeaways while preserving intent. This is useful for meeting notes, article reviews, project updates, and exam preparation where key points matter most.
+
+Writers can also use guided AI actions to shorten, expand, simplify, or reframe content. These tools are designed to save time while keeping the writer in control of the final voice and message.
+
+Overall, Smart Text Analyzer supports a complete writing workflow: draft quickly, improve quality, adjust tone, and produce final content with confidence. It is especially helpful for students, professionals, creators, and teams that write every day.`;
+
 const EditorTab = ({ addNotification }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [activeTab, setActiveTab] = useState('score');
     const [isZenMode, setIsZenMode] = useState(false);
     const textareaRef = useRef(null);
+    const savedSelectionRangeRef = useRef(null);
 
     const [isFocused, setIsFocused] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -114,13 +127,47 @@ const EditorTab = ({ addNotification }) => {
         });
         const unregisterZen = registerAction('toggle-zen', () => setIsZenMode(prev => !prev));
         const unregisterPDF = registerAction('download-pdf', () => handleDownloadPDF());
+        
+        const unregisterClear = registerAction('clear-editor', () => {
+            setContent('');
+            if (textareaRef.current) textareaRef.current.innerHTML = '';
+            if (addNotification) addNotification('Editor cleared', 'info');
+        });
+        const unregisterCopy = registerAction('copy-text', () => {
+            const raw = textareaRef.current ? textareaRef.current.innerText : content.replace(/<[^>]+>/g, '');
+            navigator.clipboard.writeText(raw).then(() => {
+                if (addNotification) addNotification('Text copied to clipboard', 'success');
+            });
+        });
+        const unregisterAI = registerAction('trigger-ai', () => {
+            // Open AI prompt box centrally if no selection is active
+            const selection = window.getSelection();
+            let rectRange = null;
+            if (selection.rangeCount > 0 && selection.toString().length > 0) {
+                rectRange = selection.getRangeAt(0);
+            }
+            
+            setInlinePrompt({
+                isOpen: true,
+                x: window.innerWidth / 2 - 200, // Roughly centered
+                y: window.innerHeight / 2 - 100,
+                query: '',
+                loading: false,
+                savedRange: rectRange,
+                isDragging: false,
+                dragStart: { x: 0, y: 0 }
+            });
+        });
 
         return () => {
             unregisterAnalysis();
             unregisterZen();
             unregisterPDF();
+            unregisterClear();
+            unregisterCopy();
+            unregisterAI();
         };
-    }, [isAnalyzing, registerAction]);
+    }, [isAnalyzing, registerAction, content, addNotification]);
 
     const handleStopAnalysis = () => {
         if (abortControllerRef.current) {
@@ -344,6 +391,80 @@ const EditorTab = ({ addNotification }) => {
         }
     };
 
+    const handleInsertDemoText = () => {
+        const html = DEMO_EDITOR_TEXT.replace(/\n/g, '<br>');
+        setContent(html);
+        if (addNotification) addNotification('Demo text added to editor.', 'info');
+    };
+
+    const htmlToPlainText = (html) => {
+        return (html || '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/p>|<\/div>/gi, '\n')
+            .replace(/<[^>]+>/g, '');
+    };
+
+    const isSelectionInsideEditor = (selection) => {
+        if (!selection || selection.rangeCount === 0 || !textareaRef.current) return false;
+        const range = selection.getRangeAt(0);
+        return textareaRef.current.contains(range.commonAncestorContainer);
+    };
+
+    const cacheSelectionIfValid = () => {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        if (!isSelectionInsideEditor(selection)) return;
+        const range = selection.getRangeAt(0);
+        if (!range.collapsed && selection.toString().trim()) {
+            savedSelectionRangeRef.current = range.cloneRange();
+        }
+    };
+
+    const getTargetActionText = () => {
+        const fullText = textareaRef.current ? textareaRef.current.innerText : htmlToPlainText(content);
+        const selection = window.getSelection();
+
+        if (selection && selection.rangeCount > 0 && isSelectionInsideEditor(selection)) {
+            const selected = selection.toString().trim();
+            if (selected) return selected;
+        }
+
+        if (savedSelectionRangeRef.current && savedSelectionRangeRef.current.toString().trim()) {
+            return savedSelectionRangeRef.current.toString().trim();
+        }
+
+        return fullText.trim();
+    };
+
+    const applyGeneratedTextToEditor = (outputText) => {
+        if (!outputText) return;
+        const replacementHtml = outputText.replace(/\n/g, '<br>');
+        const selection = window.getSelection();
+        let targetRange = null;
+
+        if (selection && selection.rangeCount > 0 && isSelectionInsideEditor(selection)) {
+            const currentRange = selection.getRangeAt(0);
+            if (!currentRange.collapsed && selection.toString().trim()) {
+                targetRange = currentRange;
+            }
+        }
+
+        if (!targetRange && savedSelectionRangeRef.current) {
+            targetRange = savedSelectionRangeRef.current;
+        }
+
+        if (!targetRange || !textareaRef.current || !textareaRef.current.contains(targetRange.commonAncestorContainer)) {
+            setContent(replacementHtml);
+            return;
+        }
+
+        const fragment = targetRange.createContextualFragment(replacementHtml);
+        targetRange.deleteContents();
+        targetRange.insertNode(fragment);
+        setContent(textareaRef.current.innerHTML);
+        savedSelectionRangeRef.current = null;
+    };
+
 
 
     return (
@@ -502,13 +623,14 @@ const EditorTab = ({ addNotification }) => {
                             onClick={() => {
                                 // Direct Simplify call
                                 setIsApplyingTone(true);
+                                const targetText = getTargetActionText();
                                 fetch(`${API_URL}/generative`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ text: content.replace(/<[^>]+>/g, ''), user: 'demo-user', tone: 'simple' })
+                                    body: JSON.stringify({ text: targetText, user: 'demo-user', tone: 'simple' })
                                 }).then(res => res.json())
                                   .then(data => {
-                                      if (data.output) setContent(data.output.replace(/\n/g, '<br>'));
+                                      if (data.output) applyGeneratedTextToEditor(data.output);
                                       setIsApplyingTone(false);
                                       if (addNotification) addNotification('Text simplified!', 'success');
                                   }).catch(() => setIsApplyingTone(false));
@@ -545,6 +667,41 @@ const EditorTab = ({ addNotification }) => {
                             <LuFeather size={16} />
                             Simplify
                         </button>
+
+                        <button
+                            onClick={handleInsertDemoText}
+                            disabled={isAnalyzing || isApplyingTone}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                background: 'rgba(0, 194, 255, 0.12)',
+                                color: '#00C2FF',
+                                border: '1px solid rgba(0, 194, 255, 0.35)',
+                                padding: '6px 14px',
+                                borderRadius: '8px',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                cursor: (isAnalyzing || isApplyingTone) ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
+                                marginLeft: '8px',
+                                opacity: (isAnalyzing || isApplyingTone) ? 0.5 : 1
+                            }}
+                            onMouseEnter={e => {
+                                if (!isAnalyzing && !isApplyingTone) {
+                                    e.currentTarget.style.background = 'rgba(0, 194, 255, 0.2)';
+                                }
+                            }}
+                            onMouseLeave={e => {
+                                if (!isAnalyzing && !isApplyingTone) {
+                                    e.currentTarget.style.background = 'rgba(0, 194, 255, 0.12)';
+                                }
+                            }}
+                            title="Insert sample demo text into the editor"
+                        >
+                            <LuFileText size={16} />
+                            Demo Text
+                        </button>
                     </div>
                 </div>
 
@@ -580,7 +737,10 @@ const EditorTab = ({ addNotification }) => {
                                 }
                             }
                         }
+
+                        cacheSelectionIfValid();
                     }}
+                    onMouseUp={cacheSelectionIfValid}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     style={{
@@ -806,9 +966,9 @@ const EditorTab = ({ addNotification }) => {
                     display: 'flex',
                     flexDirection: 'column'
                 }}>
-                    {activeTab === 'score' && <ScoreSection content={content} setContent={setContent} score={overallScore} issueCounts={issueCounts} isApplyingTone={isApplyingTone} setIsApplyingTone={setIsApplyingTone} />}
+                    {activeTab === 'score' && <ScoreSection content={content} setContent={setContent} score={overallScore} issueCounts={issueCounts} isApplyingTone={isApplyingTone} setIsApplyingTone={setIsApplyingTone} getTargetActionText={getTargetActionText} applyGeneratedTextToEditor={applyGeneratedTextToEditor} />}
                     {activeTab === 'issues' && <IssuesSection content={content} setContent={setContent} issueCounts={issueCounts} analysisResult={analysisResult} onRescan={handleAnalysis} />}
-                    {activeTab === 'genai' && <GenAISection content={content} setContent={setContent} />}
+                    {activeTab === 'genai' && <GenAISection content={content} setContent={setContent} getTargetActionText={getTargetActionText} applyGeneratedTextToEditor={applyGeneratedTextToEditor} />}
                     {activeTab === 'search' && <WebSearchSection content={content} setContent={setContent} />}
 
                 </div>
@@ -819,20 +979,21 @@ const EditorTab = ({ addNotification }) => {
 
 // --- Sub-Sections ---
 
-const ScoreSection = ({ content, setContent, score, issueCounts, isApplyingTone, setIsApplyingTone }) => {
+const ScoreSection = ({ content, setContent, score, issueCounts, isApplyingTone, setIsApplyingTone, getTargetActionText, applyGeneratedTextToEditor }) => {
     const [activeTone, setActiveTone] = React.useState(null);
 
     const applyTone = async (tone) => {
         setIsApplyingTone(true);
         setActiveTone(tone);
         try {
+            const plainText = getTargetActionText();
             const response = await fetch(`${API_URL}/generative`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: content, user: 'demo-user', tone: tone })
+                body: JSON.stringify({ text: plainText, user: 'demo-user', tone: tone })
             });
             const data = await response.json();
-            if (data.output) setContent(data.output);
+            if (data.output) applyGeneratedTextToEditor(data.output);
         } catch (error) {
             console.error("Tone application failed:", error);
             setActiveTone(null);
@@ -1053,7 +1214,7 @@ const IssuesSection = ({ content, setContent, issueCounts, analysisResult, onRes
     );
 };
 
-const GenAISection = ({ content, setContent }) => {
+const GenAISection = ({ content, setContent, getTargetActionText, applyGeneratedTextToEditor }) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [instruction, setInstruction] = React.useState('');
 
@@ -1071,7 +1232,7 @@ const GenAISection = ({ content, setContent }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    text: content.replace(/<[^>]+>/g, ''),
+                    text: getTargetActionText(),
                     user: 'demo-user',
                     tone: tone,
                     model: 'z-ai/glm-4.5-air:free' // Explicitly set reliable model
@@ -1080,11 +1241,7 @@ const GenAISection = ({ content, setContent }) => {
             const data = await response.json();
 
             if (data.output) {
-                // If it's a generation action, we might want to append or replace. 
-                // The prompt says "based on the following prompt", so it rewrites.
-                // For consistency with the UI actions which imply rewriting, we replace.
-                const formattedOutput = data.output.replace(/\n/g, '<br>');
-                setContent(formattedOutput);
+                applyGeneratedTextToEditor(data.output);
                 setInstruction('');
             }
         } catch (error) {
